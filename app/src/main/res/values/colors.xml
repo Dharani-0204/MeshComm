@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#1565C0</color>
+    <color name="primary_dark">#003c8f</color>
+    <color name="primary_light">#5e92f3</color>
+    <color name="accent">#FF6D00</color>
+
+    <color name="sos_red">#D32F2F</color>
+    <color name="sos_bg">#FFEBEE</color>
+    <color name="sos_border">#EF9A9A</color>
+
+    <color name="self_msg_bg">#E3F2FD</color>
+    <color name="other_msg_bg">#FFFFFF</color>
+    <color name="relayed_bg">#F5F5F5</color>
+
+    <color name="mesh_active">#2E7D32</color>
+    <color name="mesh_offline">#757575</color>
+    <color name="battery_low">#F57F17</color>
+    <color name="battery_ok">#2E7D32</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray_light">#F5F5F5</color>
+    <color name="gray">#9E9E9E</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+</resources>

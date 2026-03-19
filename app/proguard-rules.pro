@@ -1,0 +1,4 @@
+-keep class com.meshcomm.data.model.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn com.google.gson.**

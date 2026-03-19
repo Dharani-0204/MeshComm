@@ -1,0 +1,146 @@
+[
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_activity_home.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\activity_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_sos_bg_rounded.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\sos_bg_rounded.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_activity_setup.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\activity_setup.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-hdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-hdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-xxxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_ic_map.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\ic_map.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-xhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-mdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-xxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_fragment_broadcast.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_broadcast.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-xxxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\navigation_nav_graph.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\navigation\\nav_graph.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_bg_input_rounded.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\bg_input_rounded.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_ic_sos.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\ic_sos.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_fragment_sos.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_sos.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_item_sos_pin.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\item_sos_pin.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_fragment_chat.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_chat.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_fragment_map.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_map.xml"
+    },
+    {
+        "merged": "com.meshcomm.app-merged_res-55:/layout_fragment_sos.xml.flat",
+        "source": "com.meshcomm.app-main-57:/layout/fragment_sos.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_ic_chat.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\ic_chat.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_ic_mesh.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\ic_mesh.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_ic_profile.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\ic_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-mdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-mdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_bg_dot_red.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\bg_dot_red.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\menu_bottom_nav_menu.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\menu\\bottom_nav_menu.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_ic_broadcast.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\ic_broadcast.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_bg_spinner.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\bg_spinner.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_bg_sos_chip.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\bg_sos_chip.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_ic_message.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\ic_message.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_fragment_profile.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_fragment_mesh_status.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_mesh_status.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-xxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\drawable_bg_dot_green.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\drawable\\bg_dot_green.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\layout_item_message.xml.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\item_message.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-xhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-merged_res-55:\\mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\mipmap-hdpi\\ic_launcher_round.png"
+    }
+]

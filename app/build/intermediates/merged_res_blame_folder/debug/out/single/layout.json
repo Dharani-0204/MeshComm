@@ -1,0 +1,46 @@
+[
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\activity_setup.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\activity_setup.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\fragment_mesh_status.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_mesh_status.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\fragment_profile.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\item_sos_pin.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\item_sos_pin.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\item_message.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\item_message.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\fragment_map.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_map.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\fragment_chat.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_chat.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\activity_home.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\activity_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\fragment_sos.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_sos.xml"
+    },
+    {
+        "merged": "com.meshcomm.app-mergeDebugResources-54:/layout/fragment_sos.xml",
+        "source": "com.meshcomm.app-main-57:/layout/fragment_sos.xml"
+    },
+    {
+        "merged": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-mergeDebugResources-54:\\layout\\fragment_broadcast.xml",
+        "source": "C:\\Users\\karla\\.gradle\\daemon\\8.1\\com.meshcomm.app-main-57:\\layout\\fragment_broadcast.xml"
+    }
+]

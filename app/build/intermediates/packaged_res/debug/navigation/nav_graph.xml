@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_broadcast">
+
+    <fragment
+        android:id="@+id/nav_broadcast"
+        android:name="com.meshcomm.ui.broadcast.BroadcastFragment"
+        android:label="Mesh Broadcast"/>
+
+    <fragment
+        android:id="@+id/nav_chat"
+        android:name="com.meshcomm.ui.chat.ChatFragment"
+        android:label="Direct Chat"/>
+
+    <fragment
+        android:id="@+id/nav_sos"
+        android:name="com.meshcomm.ui.sos.SOSFragment"
+        android:label="SOS"/>
+
+    <fragment
+        android:id="@+id/nav_map"
+        android:name="com.meshcomm.ui.map.MapFragment"
+        android:label="Map"/>
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.meshcomm.ui.profile.ProfileFragment"
+        android:label="Profile"/>
+
+</navigation>

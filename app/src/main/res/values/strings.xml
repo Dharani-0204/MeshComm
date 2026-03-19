@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">MeshComm</string>
+    <string name="mesh_active">Mesh Active</string>
+    <string name="mesh_offline">Mesh Offline</string>
+    <string name="send">Send</string>
+    <string name="sos">SOS</string>
+    <string name="broadcast">Broadcast</string>
+    <string name="chat">Chat</string>
+    <string name="map">Map</string>
+    <string name="profile">Profile</string>
+    <string name="type_message">Type a message…</string>
+    <string name="include_location">Include location</string>
+    <string name="sos_hint">SOS message (optional)</string>
+    <string name="tap_to_send_sos">Tap to send SOS · Long press for CRITICAL</string>
+</resources>
