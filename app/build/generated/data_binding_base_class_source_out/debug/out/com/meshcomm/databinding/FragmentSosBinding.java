@@ -23,7 +23,25 @@ public final class FragmentSosBinding implements ViewBinding {
   private final LinearLayout rootView;
 
   @NonNull
+  public final MaterialButton btnMic;
+
+  @NonNull
+  public final MaterialButton btnQuickFire;
+
+  @NonNull
+  public final MaterialButton btnQuickMedical;
+
+  @NonNull
+  public final MaterialButton btnQuickSafety;
+
+  @NonNull
   public final MaterialButton btnSOS;
+
+  @NonNull
+  public final TextView confirmationText;
+
+  @NonNull
+  public final LinearLayout emptyState;
 
   @NonNull
   public final TextInputEditText etSosMessage;
@@ -32,15 +50,28 @@ public final class FragmentSosBinding implements ViewBinding {
   public final RecyclerView rvSosAlerts;
 
   @NonNull
+  public final TextView tvMeshStatus;
+
+  @NonNull
   public final TextView tvSosCount;
 
-  private FragmentSosBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton btnSOS,
+  private FragmentSosBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton btnMic,
+      @NonNull MaterialButton btnQuickFire, @NonNull MaterialButton btnQuickMedical,
+      @NonNull MaterialButton btnQuickSafety, @NonNull MaterialButton btnSOS,
+      @NonNull TextView confirmationText, @NonNull LinearLayout emptyState,
       @NonNull TextInputEditText etSosMessage, @NonNull RecyclerView rvSosAlerts,
-      @NonNull TextView tvSosCount) {
+      @NonNull TextView tvMeshStatus, @NonNull TextView tvSosCount) {
     this.rootView = rootView;
+    this.btnMic = btnMic;
+    this.btnQuickFire = btnQuickFire;
+    this.btnQuickMedical = btnQuickMedical;
+    this.btnQuickSafety = btnQuickSafety;
     this.btnSOS = btnSOS;
+    this.confirmationText = confirmationText;
+    this.emptyState = emptyState;
     this.etSosMessage = etSosMessage;
     this.rvSosAlerts = rvSosAlerts;
+    this.tvMeshStatus = tvMeshStatus;
     this.tvSosCount = tvSosCount;
   }
 
@@ -71,9 +102,45 @@ public final class FragmentSosBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btnMic;
+      MaterialButton btnMic = ViewBindings.findChildViewById(rootView, id);
+      if (btnMic == null) {
+        break missingId;
+      }
+
+      id = R.id.btnQuickFire;
+      MaterialButton btnQuickFire = ViewBindings.findChildViewById(rootView, id);
+      if (btnQuickFire == null) {
+        break missingId;
+      }
+
+      id = R.id.btnQuickMedical;
+      MaterialButton btnQuickMedical = ViewBindings.findChildViewById(rootView, id);
+      if (btnQuickMedical == null) {
+        break missingId;
+      }
+
+      id = R.id.btnQuickSafety;
+      MaterialButton btnQuickSafety = ViewBindings.findChildViewById(rootView, id);
+      if (btnQuickSafety == null) {
+        break missingId;
+      }
+
       id = R.id.btnSOS;
       MaterialButton btnSOS = ViewBindings.findChildViewById(rootView, id);
       if (btnSOS == null) {
+        break missingId;
+      }
+
+      id = R.id.confirmationText;
+      TextView confirmationText = ViewBindings.findChildViewById(rootView, id);
+      if (confirmationText == null) {
+        break missingId;
+      }
+
+      id = R.id.emptyState;
+      LinearLayout emptyState = ViewBindings.findChildViewById(rootView, id);
+      if (emptyState == null) {
         break missingId;
       }
 
@@ -89,14 +156,21 @@ public final class FragmentSosBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvMeshStatus;
+      TextView tvMeshStatus = ViewBindings.findChildViewById(rootView, id);
+      if (tvMeshStatus == null) {
+        break missingId;
+      }
+
       id = R.id.tvSosCount;
       TextView tvSosCount = ViewBindings.findChildViewById(rootView, id);
       if (tvSosCount == null) {
         break missingId;
       }
 
-      return new FragmentSosBinding((LinearLayout) rootView, btnSOS, etSosMessage, rvSosAlerts,
-          tvSosCount);
+      return new FragmentSosBinding((LinearLayout) rootView, btnMic, btnQuickFire, btnQuickMedical,
+          btnQuickSafety, btnSOS, confirmationText, emptyState, etSosMessage, rvSosAlerts,
+          tvMeshStatus, tvSosCount);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

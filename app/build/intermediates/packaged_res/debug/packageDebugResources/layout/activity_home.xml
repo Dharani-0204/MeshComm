@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Mesh Status Bar -->
+    <!-- Mesh Status Bar (Minimized for emergency UX) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/statusCard"
         android:layout_width="0dp"
@@ -14,7 +14,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:cardCornerRadius="0dp"
-        app:cardElevation="2dp"
+        app:cardElevation="1dp"
         app:cardBackgroundColor="@color/md_theme_primaryContainer">
 
         <LinearLayout
@@ -22,14 +22,15 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:padding="12dp">
+            android:padding="8dp"
+            android:minHeight="32dp">
 
             <View
                 android:id="@+id/statusDot"
-                android:layout_width="12dp"
-                android:layout_height="12dp"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
                 android:background="@drawable/bg_dot_green"
-                android:layout_marginEnd="12dp"/>
+                android:layout_marginEnd="8dp"/>
 
             <TextView
                 android:id="@+id/tvMeshStatus"
@@ -38,8 +39,7 @@
                 android:layout_weight="1"
                 android:text="Mesh searching…"
                 android:textColor="@color/md_theme_onPrimaryContainer"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textSize="12sp"/>
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -68,7 +68,6 @@
         android:background="@color/md_theme_surface"
         app:menu="@menu/bottom_nav_menu"
         app:labelVisibilityMode="labeled"
-        app:itemActiveIndicatorStyle="@style/Widget.Material3.BottomNavigationView.ActiveIndicator"
         app:elevation="8dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,25 +4,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.asLiveData
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.meshcomm.R
 import com.meshcomm.databinding.FragmentChatBinding
-import com.meshcomm.mesh.PeerRegistry
-import com.meshcomm.ui.broadcast.MessageAdapter
 import com.meshcomm.ui.home.MeshViewModel
-import com.meshcomm.utils.PrefsHelper
 
 class ChatFragment : Fragment() {
 
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
     private val viewModel: MeshViewModel by activityViewModels()
-    private lateinit var adapter: MessageAdapter
-    private var targetPeerId: String? = null
-    private var targetPeerName: String = "Unknown"
+    private lateinit var adapter: PeerListAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, saved: Bundle?): View {
         _binding = FragmentChatBinding.inflate(inflater, container, false)
@@ -30,57 +26,43 @@ class ChatFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        adapter = MessageAdapter(requireContext())
-        binding.rvMessages.layoutManager = LinearLayoutManager(requireContext()).apply {
-            stackFromEnd = true
-        }
-        binding.rvMessages.adapter = adapter
+        setupRecyclerView()
+        observeData()
+    }
 
-        // Show connected peers to pick
-        updatePeerList()
-
-        viewModel.meshStats.observe(viewLifecycleOwner) { updatePeerList() }
-
-        // Load direct messages for selected peer
-        targetPeerId?.let { tid ->
-            val myId = PrefsHelper.getUserId(requireContext())
-            viewModel.allMessages.asLiveData().observe(viewLifecycleOwner) { all ->
-                val direct = all.filter { msg ->
-                    (msg.senderId == myId && msg.targetId == tid) ||
-                    (msg.senderId == tid && msg.targetId == myId)
-                }
-                adapter.submitList(direct)
+    private fun setupRecyclerView() {
+        adapter = PeerListAdapter { peer ->
+            // Navigate to chat detail with the selected peer
+            val bundle = Bundle().apply {
+                putString("userId", peer.deviceId)
+                putString("userName", peer.deviceName)
             }
+            findNavController().navigate(R.id.chatDetailFragment, bundle)
         }
-
-        binding.btnSend.setOnClickListener {
-            val text = binding.etMessage.text.toString().trim()
-            val tid = targetPeerId
-            if (tid == null) {
-                Toast.makeText(requireContext(), "Select a peer first", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (text.isEmpty()) return@setOnClickListener
-
-            viewModel.sendDirect(tid, targetPeerName, text, binding.switchLocation.isChecked)
-            binding.etMessage.setText("")
+        
+        binding.rvPeers.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@ChatFragment.adapter
         }
     }
 
-    private fun updatePeerList() {
-        val peers = PeerRegistry.getConnectedPeers()
-        if (peers.isEmpty()) {
-            binding.tvPeerHint.text = "No peers connected. Searching…"
-            binding.tvPeerHint.visibility = View.VISIBLE
-        } else {
-            binding.tvPeerHint.text = "Connected peers: ${peers.joinToString { it.deviceName }}"
-            binding.tvPeerHint.visibility = View.VISIBLE
-            // Auto-select first peer for demo
-            if (targetPeerId == null) {
-                targetPeerId = peers.first().deviceId
-                targetPeerName = peers.first().deviceName
-                binding.tvChatTitle.text = "Chat with $targetPeerName"
+    private fun observeData() {
+        // Observe connected peers for chat
+        viewModel.connectedPeers.asLiveData().observe(viewLifecycleOwner) { peers ->
+            adapter.submitList(peers)
+            
+            if (peers.isEmpty()) {
+                binding.emptyState.visibility = View.VISIBLE
+                binding.rvPeers.visibility = View.GONE
+            } else {
+                binding.emptyState.visibility = View.GONE
+                binding.rvPeers.visibility = View.VISIBLE
             }
+        }
+
+        // Update peer count
+        viewModel.meshStats.observe(viewLifecycleOwner) { stats ->
+            binding.tvPeerCount.text = "${stats.connectedCount} nearby users"
         }
     }
 

@@ -28,7 +28,7 @@ class AcknowledgementManager(
             senderId = PrefsHelper.getUserId(context),
             senderName = PrefsHelper.getUserName(context),
             targetId = targetId,
-            type = MessageType.NORMAL,
+            type = MessageType.DIRECT,
             content = content,
             batteryLevel = BatteryHelper.getLevel(context),
             ttl = 7

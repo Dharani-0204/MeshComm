@@ -61,6 +61,7 @@
     <color name="md_theme_onSurface">@color/md_theme_light_onSurface</color>
     <color name="md_theme_surfaceVariant">@color/md_theme_light_surfaceVariant</color>
     <color name="md_theme_onSurfaceVariant">@color/md_theme_light_onSurfaceVariant</color>
+    <color name="md_theme_surfaceContainer">@color/md_theme_light_surfaceVariant</color>
     <color name="md_theme_outline">@color/md_theme_light_outline</color>
 
     <!-- Legacy colors -->

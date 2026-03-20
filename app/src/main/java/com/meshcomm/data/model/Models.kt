@@ -2,7 +2,7 @@ package com.meshcomm.data.model
 
 import java.util.UUID
 
-enum class MessageType { NORMAL, SOS }
+enum class MessageType { BROADCAST, DIRECT, SOS }
 enum class MessageStatus { SENT, RELAYED, DELIVERED }
 enum class UserRole { CIVILIAN, RESCUER, AUTHORITY }
 
@@ -10,8 +10,8 @@ data class Message(
     val messageId: String = UUID.randomUUID().toString(),
     val senderId: String,
     val senderName: String,
-    val targetId: String? = null,
-    val type: MessageType = MessageType.NORMAL,
+    val targetId: String? = null, // null for broadcast, specific ID for direct messages
+    val type: MessageType = MessageType.BROADCAST,
     val content: String,
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,

@@ -111,7 +111,7 @@ class MeshService : Service() {
                     MessageType.SOS -> NotificationHelper.showSOSNotification(
                         this@MeshService, msg.senderName
                     )
-                    MessageType.NORMAL -> {
+                    MessageType.BROADCAST, MessageType.DIRECT -> {
                         if (msg.senderId != PrefsHelper.getUserId(this@MeshService)) {
                             NotificationHelper.showMessageNotification(
                                 this@MeshService, msg.senderName,
@@ -163,7 +163,7 @@ class MeshService : Service() {
             longitude = lon,
             batteryLevel = BatteryHelper.getLevel(this),
             nearbyDevicesCount = PeerRegistry.getConnectedCount(),
-            type = MessageType.NORMAL
+            type = MessageType.BROADCAST
         )
         if (PeerRegistry.getConnectedCount() == 0) {
             storeAndForward.enqueue(msg)
@@ -182,7 +182,7 @@ class MeshService : Service() {
             longitude = lon,
             batteryLevel = BatteryHelper.getLevel(this),
             nearbyDevicesCount = PeerRegistry.getConnectedCount(),
-            type = MessageType.NORMAL
+            type = MessageType.DIRECT
         )
         if (PeerRegistry.getConnectedCount() == 0) {
             storeAndForward.enqueue(msg)

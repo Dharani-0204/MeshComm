@@ -1,19 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- MESH - Broadcast communication -->
     <item
-        android:id="@+id/nav_profile"
-        android:icon="@drawable/ic_profile"
-        android:title="Profile"/>
+        android:id="@+id/nav_mesh"
+        android:icon="@drawable/ic_mesh"
+        android:title="Mesh"/>
 
+    <!-- CHAT - 1-to-1 messaging -->
+    <item
+        android:id="@+id/nav_chat"
+        android:icon="@drawable/ic_chat"
+        android:title="Chat"/>
+
+    <!-- SOS - Emergency (center position) -->
+    <item
+        android:id="@+id/nav_sos"
+        android:icon="@drawable/ic_sos"
+        android:title="SOS"/>
+
+    <!-- MAP - Default and most important -->
     <item
         android:id="@+id/nav_map"
         android:icon="@drawable/ic_map"
         android:title="Map"/>
 
+    <!-- PROFILE - Settings and info -->
     <item
-        android:id="@+id/nav_sos"
-        android:icon="@drawable/ic_sos"
-        android:title="SOS"/>
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_profile"
+        android:title="Profile"/>
 
 </menu>

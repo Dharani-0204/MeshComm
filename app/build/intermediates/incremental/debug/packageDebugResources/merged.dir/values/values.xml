@@ -61,6 +61,7 @@
     <color name="md_theme_secondary">@color/md_theme_light_secondary</color>
     <color name="md_theme_secondaryContainer">@color/md_theme_light_secondaryContainer</color>
     <color name="md_theme_surface">@color/md_theme_light_surface</color>
+    <color name="md_theme_surfaceContainer">@color/md_theme_light_surfaceVariant</color>
     <color name="md_theme_surfaceVariant">@color/md_theme_light_surfaceVariant</color>
     <color name="md_theme_tertiary">@color/md_theme_light_tertiary</color>
     <color name="mesh_active">#2E7D32</color>
