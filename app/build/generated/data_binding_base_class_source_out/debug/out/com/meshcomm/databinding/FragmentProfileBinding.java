@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.textfield.TextInputEditText;
 import com.meshcomm.R;
 import java.lang.NullPointerException;
@@ -28,16 +29,22 @@ public final class FragmentProfileBinding implements ViewBinding {
   public final MaterialButton btnSaveName;
 
   @NonNull
+  public final Chip chipBattery;
+
+  @NonNull
+  public final Chip chipRelay;
+
+  @NonNull
   public final TextInputEditText etEmergencyContacts;
 
   @NonNull
   public final TextInputEditText etNameEdit;
 
   @NonNull
-  public final TextView tvBattery;
+  public final TextView tvActiveNodes;
 
   @NonNull
-  public final TextView tvRelayStatus;
+  public final TextView tvDeviceRole;
 
   @NonNull
   public final TextView tvUserId;
@@ -50,16 +57,19 @@ public final class FragmentProfileBinding implements ViewBinding {
 
   private FragmentProfileBinding(@NonNull ScrollView rootView,
       @NonNull MaterialButton btnSaveContacts, @NonNull MaterialButton btnSaveName,
+      @NonNull Chip chipBattery, @NonNull Chip chipRelay,
       @NonNull TextInputEditText etEmergencyContacts, @NonNull TextInputEditText etNameEdit,
-      @NonNull TextView tvBattery, @NonNull TextView tvRelayStatus, @NonNull TextView tvUserId,
+      @NonNull TextView tvActiveNodes, @NonNull TextView tvDeviceRole, @NonNull TextView tvUserId,
       @NonNull TextView tvUserName, @NonNull TextView tvUserRole) {
     this.rootView = rootView;
     this.btnSaveContacts = btnSaveContacts;
     this.btnSaveName = btnSaveName;
+    this.chipBattery = chipBattery;
+    this.chipRelay = chipRelay;
     this.etEmergencyContacts = etEmergencyContacts;
     this.etNameEdit = etNameEdit;
-    this.tvBattery = tvBattery;
-    this.tvRelayStatus = tvRelayStatus;
+    this.tvActiveNodes = tvActiveNodes;
+    this.tvDeviceRole = tvDeviceRole;
     this.tvUserId = tvUserId;
     this.tvUserName = tvUserName;
     this.tvUserRole = tvUserRole;
@@ -104,6 +114,18 @@ public final class FragmentProfileBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.chipBattery;
+      Chip chipBattery = ViewBindings.findChildViewById(rootView, id);
+      if (chipBattery == null) {
+        break missingId;
+      }
+
+      id = R.id.chipRelay;
+      Chip chipRelay = ViewBindings.findChildViewById(rootView, id);
+      if (chipRelay == null) {
+        break missingId;
+      }
+
       id = R.id.etEmergencyContacts;
       TextInputEditText etEmergencyContacts = ViewBindings.findChildViewById(rootView, id);
       if (etEmergencyContacts == null) {
@@ -116,15 +138,15 @@ public final class FragmentProfileBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.tvBattery;
-      TextView tvBattery = ViewBindings.findChildViewById(rootView, id);
-      if (tvBattery == null) {
+      id = R.id.tvActiveNodes;
+      TextView tvActiveNodes = ViewBindings.findChildViewById(rootView, id);
+      if (tvActiveNodes == null) {
         break missingId;
       }
 
-      id = R.id.tvRelayStatus;
-      TextView tvRelayStatus = ViewBindings.findChildViewById(rootView, id);
-      if (tvRelayStatus == null) {
+      id = R.id.tvDeviceRole;
+      TextView tvDeviceRole = ViewBindings.findChildViewById(rootView, id);
+      if (tvDeviceRole == null) {
         break missingId;
       }
 
@@ -147,8 +169,8 @@ public final class FragmentProfileBinding implements ViewBinding {
       }
 
       return new FragmentProfileBinding((ScrollView) rootView, btnSaveContacts, btnSaveName,
-          etEmergencyContacts, etNameEdit, tvBattery, tvRelayStatus, tvUserId, tvUserName,
-          tvUserRole);
+          chipBattery, chipRelay, etEmergencyContacts, etNameEdit, tvActiveNodes, tvDeviceRole,
+          tvUserId, tvUserName, tvUserRole);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

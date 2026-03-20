@@ -4,15 +4,15 @@ package com.meshcomm.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentContainerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.card.MaterialCardView;
 import com.meshcomm.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -20,7 +20,7 @@ import java.lang.String;
 
 public final class ActivityHomeBinding implements ViewBinding {
   @NonNull
-  private final CoordinatorLayout rootView;
+  private final ConstraintLayout rootView;
 
   @NonNull
   public final BottomNavigationView bottomNav;
@@ -29,7 +29,7 @@ public final class ActivityHomeBinding implements ViewBinding {
   public final FragmentContainerView navHostFragment;
 
   @NonNull
-  public final LinearLayout statusBar;
+  public final MaterialCardView statusCard;
 
   @NonNull
   public final View statusDot;
@@ -37,20 +37,21 @@ public final class ActivityHomeBinding implements ViewBinding {
   @NonNull
   public final TextView tvMeshStatus;
 
-  private ActivityHomeBinding(@NonNull CoordinatorLayout rootView,
+  private ActivityHomeBinding(@NonNull ConstraintLayout rootView,
       @NonNull BottomNavigationView bottomNav, @NonNull FragmentContainerView navHostFragment,
-      @NonNull LinearLayout statusBar, @NonNull View statusDot, @NonNull TextView tvMeshStatus) {
+      @NonNull MaterialCardView statusCard, @NonNull View statusDot,
+      @NonNull TextView tvMeshStatus) {
     this.rootView = rootView;
     this.bottomNav = bottomNav;
     this.navHostFragment = navHostFragment;
-    this.statusBar = statusBar;
+    this.statusCard = statusCard;
     this.statusDot = statusDot;
     this.tvMeshStatus = tvMeshStatus;
   }
 
   @Override
   @NonNull
-  public CoordinatorLayout getRoot() {
+  public ConstraintLayout getRoot() {
     return rootView;
   }
 
@@ -87,9 +88,9 @@ public final class ActivityHomeBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.statusBar;
-      LinearLayout statusBar = ViewBindings.findChildViewById(rootView, id);
-      if (statusBar == null) {
+      id = R.id.statusCard;
+      MaterialCardView statusCard = ViewBindings.findChildViewById(rootView, id);
+      if (statusCard == null) {
         break missingId;
       }
 
@@ -105,8 +106,8 @@ public final class ActivityHomeBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityHomeBinding((CoordinatorLayout) rootView, bottomNav, navHostFragment,
-          statusBar, statusDot, tvMeshStatus);
+      return new ActivityHomeBinding((ConstraintLayout) rootView, bottomNav, navHostFragment,
+          statusCard, statusDot, tvMeshStatus);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

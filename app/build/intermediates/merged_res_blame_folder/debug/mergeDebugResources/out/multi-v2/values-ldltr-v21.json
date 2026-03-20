@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.meshcomm.app-mergeDebugResources-2:/values-ldltr-v21/values-ldltr-v21.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\iamsh\\.gradle\\caches\\8.14.4\\transforms\\27f732d31d6dd5ae0aa44fb51430fa09\\transformed\\appcompat-1.6.1\\res\\values-ldltr-v21\\values-ldltr-v21.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "112",
+                        "endOffsets": "163"
+                    }
+                }
+            ]
+        }
+    ]
+}

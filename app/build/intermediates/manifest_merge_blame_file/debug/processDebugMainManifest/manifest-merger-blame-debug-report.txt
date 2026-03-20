@@ -1,0 +1,333 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.meshcomm"
+4    android:versionCode="2026032014"
+5    android:versionName="1.0.2026032014" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="34" />
+10
+11    <!-- Bluetooth permissions -->
+12    <uses-permission
+12-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:6:5-94
+13        android:name="android.permission.BLUETOOTH"
+13-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:6:22-65
+14        android:maxSdkVersion="30" />
+14-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:6:66-92
+15    <uses-permission
+15-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:7:5-100
+16        android:name="android.permission.BLUETOOTH_ADMIN"
+16-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:7:22-71
+17        android:maxSdkVersion="30" />
+17-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:7:72-98
+18    <uses-permission
+18-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:8:5-9:77
+19        android:name="android.permission.BLUETOOTH_SCAN"
+19-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:8:22-70
+20        android:usesPermissionFlags="neverForLocation" />
+20-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:9:9-55
+21    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+21-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:10:5-77
+21-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:10:22-75
+22    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+22-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:11:5-75
+22-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:11:22-73
+23
+24    <!-- WiFi Direct -->
+25    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+25-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:14:5-75
+25-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:14:22-73
+26    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+26-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:15:5-75
+26-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:15:22-73
+27    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+27-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:16:5-78
+27-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:16:22-76
+28    <uses-permission android:name="android.permission.INTERNET" />
+28-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:17:5-66
+28-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:17:22-64
+29    <uses-permission
+29-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:18:5-19:84
+30        android:name="android.permission.NEARBY_WIFI_DEVICES"
+30-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:18:22-75
+31        android:usesPermissionFlags="neverForLocation" />
+31-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:19:9-55
+32
+33    <!-- Location (needed for BLE scanning + WiFi Direct + GPS) -->
+34    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+34-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:22:5-78
+34-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:22:22-76
+35    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+35-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:23:5-80
+35-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:23:22-78
+36    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+36-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:24:5-84
+36-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:24:22-82
+37
+38    <!-- Foreground service -->
+39    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+39-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:27:5-76
+39-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:27:22-74
+40    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+40-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:28:5-93
+40-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:28:22-91
+41
+42    <!-- Battery + wake lock -->
+43    <uses-permission android:name="android.permission.BATTERY_STATS" />
+43-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:31:5-107
+43-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:31:22-69
+44    <uses-permission android:name="android.permission.WAKE_LOCK" />
+44-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:32:5-67
+44-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:32:22-65
+45    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+45-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:33:5-80
+45-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:33:22-78
+46
+47    <!-- Audio for SOS alert + Speech Recognition -->
+48    <uses-permission android:name="android.permission.VIBRATE" />
+48-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:36:5-65
+48-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:36:22-63
+49    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+49-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:37:5-70
+49-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:37:22-68
+50
+51    <!-- Storage -->
+52    <uses-permission
+52-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:40:5-106
+53        android:name="android.permission.READ_EXTERNAL_STORAGE"
+53-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:40:22-77
+54        android:maxSdkVersion="32" />
+54-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:40:78-104
+55    <uses-permission
+55-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:41:5-107
+56        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+56-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:41:22-78
+57        android:maxSdkVersion="28" />
+57-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:41:79-105
+58
+59    <!-- Features -->
+60    <uses-feature
+60-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:44:5-90
+61        android:name="android.hardware.bluetooth_le"
+61-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:44:19-63
+62        android:required="false" />
+62-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:44:64-88
+63    <uses-feature
+63-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:45:5-89
+64        android:name="android.hardware.wifi.direct"
+64-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:45:19-62
+65        android:required="false" />
+65-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:45:63-87
+66    <uses-feature
+66-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:46:5-90
+67        android:name="android.hardware.location.gps"
+67-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:46:19-63
+68        android:required="false" />
+68-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:46:64-88
+69
+70    <permission
+70-->[androidx.core:core:1.13.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\da76ab554b8d347a1c1cfe2870e18c29\transformed\core-1.13.0\AndroidManifest.xml:22:5-24:47
+71        android:name="com.meshcomm.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+71-->[androidx.core:core:1.13.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\da76ab554b8d347a1c1cfe2870e18c29\transformed\core-1.13.0\AndroidManifest.xml:23:9-81
+72        android:protectionLevel="signature" />
+72-->[androidx.core:core:1.13.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\da76ab554b8d347a1c1cfe2870e18c29\transformed\core-1.13.0\AndroidManifest.xml:24:9-44
+73
+74    <uses-permission android:name="com.meshcomm.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+74-->[androidx.core:core:1.13.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\da76ab554b8d347a1c1cfe2870e18c29\transformed\core-1.13.0\AndroidManifest.xml:26:5-97
+74-->[androidx.core:core:1.13.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\da76ab554b8d347a1c1cfe2870e18c29\transformed\core-1.13.0\AndroidManifest.xml:26:22-94
+75
+76    <application
+76-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:48:5-93:19
+77        android:name="com.meshcomm.MeshCommApp"
+77-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:49:9-36
+78        android:allowBackup="true"
+78-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:50:9-35
+79        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+79-->[androidx.core:core:1.13.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\da76ab554b8d347a1c1cfe2870e18c29\transformed\core-1.13.0\AndroidManifest.xml:28:18-86
+80        android:debuggable="true"
+81        android:extractNativeLibs="false"
+82        android:icon="@mipmap/ic_launcher"
+82-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:51:9-43
+83        android:label="@string/app_name"
+83-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:52:9-41
+84        android:roundIcon="@mipmap/ic_launcher_round"
+84-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:53:9-54
+85        android:supportsRtl="true"
+85-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:54:9-35
+86        android:theme="@style/Theme.MeshComm"
+86-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:55:9-46
+87        android:usesCleartextTraffic="true" >
+87-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:56:9-44
+88        <activity
+88-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:58:9-66:20
+89            android:name="com.meshcomm.ui.splash.SplashActivity"
+89-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:59:13-53
+90            android:exported="true"
+90-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:60:13-36
+91            android:theme="@style/Theme.MeshComm.Splash" >
+91-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:61:13-57
+92            <intent-filter>
+92-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:62:13-65:29
+93                <action android:name="android.intent.action.MAIN" />
+93-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:63:17-68
+93-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:63:25-66
+94
+95                <category android:name="android.intent.category.LAUNCHER" />
+95-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:64:17-76
+95-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:64:27-74
+96            </intent-filter>
+97        </activity>
+98        <activity
+98-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:68:9-70:39
+99            android:name="com.meshcomm.ui.setup.SetupActivity"
+99-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:69:13-51
+100            android:exported="false" />
+100-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:70:13-37
+101        <activity
+101-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:72:9-75:57
+102            android:name="com.meshcomm.ui.home.HomeActivity"
+102-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:73:13-49
+103            android:exported="false"
+103-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:74:13-37
+104            android:windowSoftInputMode="adjustResize" />
+104-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:75:13-55
+105
+106        <service
+106-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:77:9-80:62
+107            android:name="com.meshcomm.mesh.MeshService"
+107-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:78:13-45
+108            android:exported="false"
+108-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:79:13-37
+109            android:foregroundServiceType="connectedDevice" />
+109-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:80:13-60
+110
+111        <receiver
+111-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:82:9-91:20
+112            android:name="com.meshcomm.mesh.WiFiDirectBroadcastReceiver"
+112-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:83:13-61
+113            android:exported="false" >
+113-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:84:13-37
+114            <intent-filter>
+114-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:85:13-90:29
+115                <action android:name="android.net.wifi.p2p.STATE_CHANGED" />
+115-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:86:17-76
+115-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:86:25-74
+116                <action android:name="android.net.wifi.p2p.PEERS_CHANGED" />
+116-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:87:17-76
+116-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:87:25-74
+117                <action android:name="android.net.wifi.p2p.CONNECTION_STATE_CHANGE" />
+117-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:88:17-86
+117-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:88:25-84
+118                <action android:name="android.net.wifi.p2p.THIS_DEVICE_CHANGED" />
+118-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:89:17-82
+118-->C:\Unknown Files\Hackathon\MeshComm\app\src\main\AndroidManifest.xml:89:25-80
+119            </intent-filter>
+120        </receiver>
+121
+122        <activity
+122-->[com.google.android.gms:play-services-base:18.1.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\34dec5b0b46e7eea9fca490e26d85a1a\transformed\jetified-play-services-base-18.1.0\AndroidManifest.xml:20:9-22:45
+123            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+123-->[com.google.android.gms:play-services-base:18.1.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\34dec5b0b46e7eea9fca490e26d85a1a\transformed\jetified-play-services-base-18.1.0\AndroidManifest.xml:20:19-85
+124            android:exported="false"
+124-->[com.google.android.gms:play-services-base:18.1.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\34dec5b0b46e7eea9fca490e26d85a1a\transformed\jetified-play-services-base-18.1.0\AndroidManifest.xml:22:19-43
+125            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+125-->[com.google.android.gms:play-services-base:18.1.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\34dec5b0b46e7eea9fca490e26d85a1a\transformed\jetified-play-services-base-18.1.0\AndroidManifest.xml:21:19-78
+126
+127        <meta-data
+127-->[com.google.android.gms:play-services-basement:18.1.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\0c719729f7d044b7dbc05074f6ea40d9\transformed\jetified-play-services-basement-18.1.0\AndroidManifest.xml:21:9-23:69
+128            android:name="com.google.android.gms.version"
+128-->[com.google.android.gms:play-services-basement:18.1.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\0c719729f7d044b7dbc05074f6ea40d9\transformed\jetified-play-services-basement-18.1.0\AndroidManifest.xml:22:13-58
+129            android:value="@integer/google_play_services_version" />
+129-->[com.google.android.gms:play-services-basement:18.1.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\0c719729f7d044b7dbc05074f6ea40d9\transformed\jetified-play-services-basement-18.1.0\AndroidManifest.xml:23:13-66
+130
+131        <provider
+131-->[androidx.emoji2:emoji2:1.2.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a77bb959001044ef41180bf77d395c10\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+132            android:name="androidx.startup.InitializationProvider"
+132-->[androidx.emoji2:emoji2:1.2.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a77bb959001044ef41180bf77d395c10\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:25:13-67
+133            android:authorities="com.meshcomm.androidx-startup"
+133-->[androidx.emoji2:emoji2:1.2.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a77bb959001044ef41180bf77d395c10\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:26:13-68
+134            android:exported="false" >
+134-->[androidx.emoji2:emoji2:1.2.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a77bb959001044ef41180bf77d395c10\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:27:13-37
+135            <meta-data
+135-->[androidx.emoji2:emoji2:1.2.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a77bb959001044ef41180bf77d395c10\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+136                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+136-->[androidx.emoji2:emoji2:1.2.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a77bb959001044ef41180bf77d395c10\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:30:17-75
+137                android:value="androidx.startup" />
+137-->[androidx.emoji2:emoji2:1.2.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a77bb959001044ef41180bf77d395c10\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:31:17-49
+138            <meta-data
+138-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\7800b3338be9a1e871fef185d883abcb\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
+139                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+139-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\7800b3338be9a1e871fef185d883abcb\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
+140                android:value="androidx.startup" />
+140-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\7800b3338be9a1e871fef185d883abcb\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
+141            <meta-data
+141-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+142                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+142-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+143                android:value="androidx.startup" />
+143-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+144        </provider>
+145
+146        <uses-library
+146-->[androidx.window:window:1.0.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\b616f629dfafb56898c2e10a31e0ad9d\transformed\jetified-window-1.0.0\AndroidManifest.xml:25:9-27:40
+147            android:name="androidx.window.extensions"
+147-->[androidx.window:window:1.0.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\b616f629dfafb56898c2e10a31e0ad9d\transformed\jetified-window-1.0.0\AndroidManifest.xml:26:13-54
+148            android:required="false" />
+148-->[androidx.window:window:1.0.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\b616f629dfafb56898c2e10a31e0ad9d\transformed\jetified-window-1.0.0\AndroidManifest.xml:27:13-37
+149        <uses-library
+149-->[androidx.window:window:1.0.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\b616f629dfafb56898c2e10a31e0ad9d\transformed\jetified-window-1.0.0\AndroidManifest.xml:28:9-30:40
+150            android:name="androidx.window.sidecar"
+150-->[androidx.window:window:1.0.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\b616f629dfafb56898c2e10a31e0ad9d\transformed\jetified-window-1.0.0\AndroidManifest.xml:29:13-51
+151            android:required="false" />
+151-->[androidx.window:window:1.0.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\b616f629dfafb56898c2e10a31e0ad9d\transformed\jetified-window-1.0.0\AndroidManifest.xml:30:13-37
+152
+153        <service
+153-->[androidx.room:room-runtime:2.6.1] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\cd659df22129d0ddef8e6aa073b46529\transformed\room-runtime-2.6.1\AndroidManifest.xml:24:9-28:63
+154            android:name="androidx.room.MultiInstanceInvalidationService"
+154-->[androidx.room:room-runtime:2.6.1] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\cd659df22129d0ddef8e6aa073b46529\transformed\room-runtime-2.6.1\AndroidManifest.xml:25:13-74
+155            android:directBootAware="true"
+155-->[androidx.room:room-runtime:2.6.1] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\cd659df22129d0ddef8e6aa073b46529\transformed\room-runtime-2.6.1\AndroidManifest.xml:26:13-43
+156            android:exported="false" />
+156-->[androidx.room:room-runtime:2.6.1] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\cd659df22129d0ddef8e6aa073b46529\transformed\room-runtime-2.6.1\AndroidManifest.xml:27:13-37
+157
+158        <receiver
+158-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+159            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+159-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
+160            android:directBootAware="false"
+160-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
+161            android:enabled="true"
+161-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+162            android:exported="true"
+162-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
+163            android:permission="android.permission.DUMP" >
+163-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
+164            <intent-filter>
+164-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
+165                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+165-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
+165-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
+166            </intent-filter>
+167            <intent-filter>
+167-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
+168                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+168-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
+168-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
+169            </intent-filter>
+170            <intent-filter>
+170-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
+171                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+171-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
+171-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
+172            </intent-filter>
+173            <intent-filter>
+173-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
+174                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+174-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
+174-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+175            </intent-filter>
+176        </receiver>
+177    </application>
+178
+179</manifest>
