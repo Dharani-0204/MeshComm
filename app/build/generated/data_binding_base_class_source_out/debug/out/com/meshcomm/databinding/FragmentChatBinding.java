@@ -8,12 +8,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
 import com.meshcomm.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -24,34 +21,20 @@ public final class FragmentChatBinding implements ViewBinding {
   private final LinearLayout rootView;
 
   @NonNull
-  public final MaterialButton btnSend;
+  public final LinearLayout emptyState;
 
   @NonNull
-  public final TextInputEditText etMessage;
+  public final RecyclerView rvPeers;
 
   @NonNull
-  public final RecyclerView rvMessages;
+  public final TextView tvPeerCount;
 
-  @NonNull
-  public final SwitchCompat switchLocation;
-
-  @NonNull
-  public final TextView tvChatTitle;
-
-  @NonNull
-  public final TextView tvPeerHint;
-
-  private FragmentChatBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton btnSend,
-      @NonNull TextInputEditText etMessage, @NonNull RecyclerView rvMessages,
-      @NonNull SwitchCompat switchLocation, @NonNull TextView tvChatTitle,
-      @NonNull TextView tvPeerHint) {
+  private FragmentChatBinding(@NonNull LinearLayout rootView, @NonNull LinearLayout emptyState,
+      @NonNull RecyclerView rvPeers, @NonNull TextView tvPeerCount) {
     this.rootView = rootView;
-    this.btnSend = btnSend;
-    this.etMessage = etMessage;
-    this.rvMessages = rvMessages;
-    this.switchLocation = switchLocation;
-    this.tvChatTitle = tvChatTitle;
-    this.tvPeerHint = tvPeerHint;
+    this.emptyState = emptyState;
+    this.rvPeers = rvPeers;
+    this.tvPeerCount = tvPeerCount;
   }
 
   @Override
@@ -81,44 +64,25 @@ public final class FragmentChatBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.btnSend;
-      MaterialButton btnSend = ViewBindings.findChildViewById(rootView, id);
-      if (btnSend == null) {
+      id = R.id.emptyState;
+      LinearLayout emptyState = ViewBindings.findChildViewById(rootView, id);
+      if (emptyState == null) {
         break missingId;
       }
 
-      id = R.id.etMessage;
-      TextInputEditText etMessage = ViewBindings.findChildViewById(rootView, id);
-      if (etMessage == null) {
+      id = R.id.rvPeers;
+      RecyclerView rvPeers = ViewBindings.findChildViewById(rootView, id);
+      if (rvPeers == null) {
         break missingId;
       }
 
-      id = R.id.rvMessages;
-      RecyclerView rvMessages = ViewBindings.findChildViewById(rootView, id);
-      if (rvMessages == null) {
+      id = R.id.tvPeerCount;
+      TextView tvPeerCount = ViewBindings.findChildViewById(rootView, id);
+      if (tvPeerCount == null) {
         break missingId;
       }
 
-      id = R.id.switchLocation;
-      SwitchCompat switchLocation = ViewBindings.findChildViewById(rootView, id);
-      if (switchLocation == null) {
-        break missingId;
-      }
-
-      id = R.id.tvChatTitle;
-      TextView tvChatTitle = ViewBindings.findChildViewById(rootView, id);
-      if (tvChatTitle == null) {
-        break missingId;
-      }
-
-      id = R.id.tvPeerHint;
-      TextView tvPeerHint = ViewBindings.findChildViewById(rootView, id);
-      if (tvPeerHint == null) {
-        break missingId;
-      }
-
-      return new FragmentChatBinding((LinearLayout) rootView, btnSend, etMessage, rvMessages,
-          switchLocation, tvChatTitle, tvPeerHint);
+      return new FragmentChatBinding((LinearLayout) rootView, emptyState, rvPeers, tvPeerCount);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

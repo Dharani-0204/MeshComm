@@ -4,6 +4,22 @@
         "source": "com.meshcomm.app-main-6:/layout/fragment_chat.xml"
     },
     {
+        "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_chat_detail.xml",
+        "source": "com.meshcomm.app-main-6:/layout/fragment_chat_detail.xml"
+    },
+    {
+        "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_profile.xml",
+        "source": "com.meshcomm.app-main-6:/layout/fragment_profile.xml"
+    },
+    {
+        "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_chat_list.xml",
+        "source": "com.meshcomm.app-main-6:/layout/fragment_chat_list.xml"
+    },
+    {
+        "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_mesh_status.xml",
+        "source": "com.meshcomm.app-main-6:/layout/fragment_mesh_status.xml"
+    },
+    {
         "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/activity_home.xml",
         "source": "com.meshcomm.app-main-6:/layout/activity_home.xml"
     },
@@ -12,8 +28,8 @@
         "source": "com.meshcomm.app-main-6:/layout/fragment_map.xml"
     },
     {
-        "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_profile.xml",
-        "source": "com.meshcomm.app-main-6:/layout/fragment_profile.xml"
+        "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_mesh.xml",
+        "source": "com.meshcomm.app-main-6:/layout/fragment_mesh.xml"
     },
     {
         "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_broadcast.xml",
@@ -24,12 +40,12 @@
         "source": "com.meshcomm.app-main-6:/layout/item_message.xml"
     },
     {
-        "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_mesh_status.xml",
-        "source": "com.meshcomm.app-main-6:/layout/fragment_mesh_status.xml"
-    },
-    {
         "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/item_sos_pin.xml",
         "source": "com.meshcomm.app-main-6:/layout/item_sos_pin.xml"
+    },
+    {
+        "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/item_peer.xml",
+        "source": "com.meshcomm.app-main-6:/layout/item_peer.xml"
     },
     {
         "merged": "com.meshcomm.app-mergeDebugResources-3:/layout/fragment_sos.xml",

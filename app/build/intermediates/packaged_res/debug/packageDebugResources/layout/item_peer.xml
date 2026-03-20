@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="4dp"
+    android:layout_marginHorizontal="0dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/md_theme_surfaceContainer"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvPeerName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="User Name"
+                    android:textColor="@color/md_theme_onSurface"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/tvPeerId"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="ID: abc12345"
+                    android:textColor="@color/md_theme_onSurfaceVariant"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🟢 Connected"
+                android:textSize="11sp"
+                style="@style/Widget.Material3.Chip.Suggestion"/>
+
+        </LinearLayout>
+
+        <!-- Info row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tvPeerRole"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="👤 Civilian"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/tvConnectionInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BLUETOOTH • -65 dBm"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                android:textSize="12sp"/>
+
+        </LinearLayout>
+
+        <!-- Bottom chips -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipBattery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔋 85%"
+                android:textSize="11sp"
+                style="@style/Widget.Material3.Chip.Suggestion"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tap to chat"
+                android:textColor="@color/md_theme_primary"
+                android:textSize="12sp"
+                android:layout_gravity="center_vertical"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

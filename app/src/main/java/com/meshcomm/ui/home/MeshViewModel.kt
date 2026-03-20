@@ -13,10 +13,13 @@ import androidx.lifecycle.viewModelScope
 import com.meshcomm.data.db.AppDatabase
 import com.meshcomm.data.model.Message
 import com.meshcomm.data.model.MeshStats
+import com.meshcomm.data.model.PeerDevice
 import com.meshcomm.data.repository.MessageRepository
 import com.meshcomm.mesh.MeshService
 import com.meshcomm.mesh.PeerRegistry
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MeshViewModel(application: Application) : AndroidViewModel(application) {
@@ -32,6 +35,9 @@ class MeshViewModel(application: Application) : AndroidViewModel(application) {
     val broadcastMessages = repo.getBroadcastMessages()
     val sosMessages = repo.getSOSMessages()
     val allMessages = repo.getAllMessages()
+    
+    // Expose connected peers as Flow
+    val connectedPeers: Flow<List<PeerDevice>> = PeerRegistry.peerFlow
 
     var meshService: MeshService? = null
         private set

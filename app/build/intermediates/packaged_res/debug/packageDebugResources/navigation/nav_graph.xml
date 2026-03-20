@@ -3,28 +3,52 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/nav_broadcast">
+    app:startDestination="@id/nav_map">
 
-    <fragment
-        android:id="@+id/nav_broadcast"
-        android:name="com.meshcomm.ui.broadcast.BroadcastFragment"
-        android:label="Mesh Broadcast"/>
-
-    <fragment
-        android:id="@+id/nav_chat"
-        android:name="com.meshcomm.ui.chat.ChatFragment"
-        android:label="Direct Chat"/>
-
-    <fragment
-        android:id="@+id/nav_sos"
-        android:name="com.meshcomm.ui.sos.SOSFragment"
-        android:label="SOS"/>
-
+    <!-- MAP SCREEN - DEFAULT (Most important in disaster) -->
     <fragment
         android:id="@+id/nav_map"
         android:name="com.meshcomm.ui.map.MapFragment"
         android:label="Map"/>
 
+    <!-- MESH SCREEN - Broadcast communication -->
+    <fragment
+        android:id="@+id/nav_mesh"
+        android:name="com.meshcomm.ui.broadcast.BroadcastFragment"
+        android:label="Mesh"/>
+
+    <!-- CHAT LIST SCREEN - 1-to-1 messaging -->
+    <fragment
+        android:id="@+id/nav_chat"
+        android:name="com.meshcomm.ui.chat.ChatFragment"
+        android:label="Chat">
+        
+        <!-- Navigate to specific chat -->
+        <action
+            android:id="@+id/action_chat_to_chat_detail"
+            app:destination="@id/chatDetailFragment"/>
+    </fragment>
+
+    <!-- CHAT DETAIL SCREEN - Individual conversation -->
+    <fragment
+        android:id="@+id/chatDetailFragment"
+        android:name="com.meshcomm.ui.chat.ChatDetailFragment"
+        android:label="Chat Detail">
+        <argument
+            android:name="userId"
+            app:argType="string"/>
+        <argument
+            android:name="userName"
+            app:argType="string"/>
+    </fragment>
+
+    <!-- SOS SCREEN - Emergency -->
+    <fragment
+        android:id="@+id/nav_sos"
+        android:name="com.meshcomm.ui.sos.SOSFragment"
+        android:label="SOS"/>
+
+    <!-- PROFILE SCREEN - Settings/Info -->
     <fragment
         android:id="@+id/nav_profile"
         android:name="com.meshcomm.ui.profile.ProfileFragment"
