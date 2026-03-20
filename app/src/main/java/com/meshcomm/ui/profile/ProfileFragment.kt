@@ -23,13 +23,21 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val ctx = requireContext()
-        binding.tvUserId.text = "User ID: ${PrefsHelper.getUserId(ctx)}"
+        binding.tvUserId.text = "ID: ${PrefsHelper.getUserId(ctx)}"
         binding.tvUserName.text = PrefsHelper.getUserName(ctx)
-        binding.tvUserRole.text = PrefsHelper.getUserRole(ctx).name
-        binding.tvBattery.text = "Battery: ${BatteryHelper.getLevel(ctx)}%"
-
+        binding.tvUserRole.text = "Role: ${PrefsHelper.getUserRole(ctx).name}"
+        
+        // Update battery chip
+        val batteryLevel = BatteryHelper.getLevel(ctx)
+        binding.chipBattery.text = "🔋 $batteryLevel%"
+        
+        // Update relay chip
         val canRelay = BatteryHelper.canRelay(ctx)
-        binding.tvRelayStatus.text = if (canRelay) "✅ Acting as relay node" else "⚠️ Low battery — relay disabled"
+        binding.chipRelay.text = if (canRelay) "📡 Relay: ON" else "📡 Relay: OFF"
+        
+        // Update mesh status
+        binding.tvActiveNodes.text = "0"
+        binding.tvDeviceRole.text = if (canRelay) "Relay Node" else "Client"
 
         binding.etNameEdit.setText(PrefsHelper.getUserName(ctx))
 

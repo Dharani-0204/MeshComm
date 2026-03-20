@@ -9,6 +9,7 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.meshcomm.R
 import com.meshcomm.data.model.UserRole
 import com.meshcomm.ui.home.HomeActivity
@@ -22,13 +23,15 @@ class SetupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setup)
 
-        val etName    = findViewById<EditText>(R.id.etName)
-        val spRole    = findViewById<Spinner>(R.id.spRole)
-        val btnStart  = findViewById<Button>(R.id.btnStart)
+        val etName = findViewById<EditText>(R.id.etName)
+        val actvRole = findViewById<AutoCompleteTextView>(R.id.actvRole)
+        val btnStart = findViewById<Button>(R.id.btnStart)
 
-        // Role spinner
-        val roles = arrayOf("Civilian", "Rescuer", "Authority")
-        spRole.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, roles)
+        // Setup Material Design 3 Exposed Dropdown
+        val roles = arrayOf("Civilian", "Rescuer", "Volunteer")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, roles)
+        actvRole.setAdapter(adapter)
+        actvRole.setText(roles[0], false) // Set default value
 
         btnStart.setOnClickListener {
             val name = etName.text.toString().trim()
@@ -36,11 +39,14 @@ class SetupActivity : AppCompatActivity() {
                 etName.error = "Please enter your name"
                 return@setOnClickListener
             }
-            val role = when (spRole.selectedItemPosition) {
-                1 -> UserRole.RESCUER
-                2 -> UserRole.AUTHORITY
+            
+            val selectedRole = actvRole.text.toString()
+            val role = when (selectedRole) {
+                "Rescuer" -> UserRole.RESCUER
+                "Volunteer" -> UserRole.AUTHORITY
                 else -> UserRole.CIVILIAN
             }
+            
             PrefsHelper.setUserName(this, name)
             PrefsHelper.setUserRole(this, role)
             PrefsHelper.setSetupDone(this)

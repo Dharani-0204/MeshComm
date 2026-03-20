@@ -4,14 +4,15 @@ package com.meshcomm.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.meshcomm.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -22,20 +23,25 @@ public final class ActivitySetupBinding implements ViewBinding {
   private final ScrollView rootView;
 
   @NonNull
+  public final AutoCompleteTextView actvRole;
+
+  @NonNull
   public final MaterialButton btnStart;
 
   @NonNull
   public final TextInputEditText etName;
 
   @NonNull
-  public final Spinner spRole;
+  public final TextInputLayout roleDropdownLayout;
 
-  private ActivitySetupBinding(@NonNull ScrollView rootView, @NonNull MaterialButton btnStart,
-      @NonNull TextInputEditText etName, @NonNull Spinner spRole) {
+  private ActivitySetupBinding(@NonNull ScrollView rootView, @NonNull AutoCompleteTextView actvRole,
+      @NonNull MaterialButton btnStart, @NonNull TextInputEditText etName,
+      @NonNull TextInputLayout roleDropdownLayout) {
     this.rootView = rootView;
+    this.actvRole = actvRole;
     this.btnStart = btnStart;
     this.etName = etName;
-    this.spRole = spRole;
+    this.roleDropdownLayout = roleDropdownLayout;
   }
 
   @Override
@@ -65,6 +71,12 @@ public final class ActivitySetupBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.actvRole;
+      AutoCompleteTextView actvRole = ViewBindings.findChildViewById(rootView, id);
+      if (actvRole == null) {
+        break missingId;
+      }
+
       id = R.id.btnStart;
       MaterialButton btnStart = ViewBindings.findChildViewById(rootView, id);
       if (btnStart == null) {
@@ -77,13 +89,14 @@ public final class ActivitySetupBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.spRole;
-      Spinner spRole = ViewBindings.findChildViewById(rootView, id);
-      if (spRole == null) {
+      id = R.id.roleDropdownLayout;
+      TextInputLayout roleDropdownLayout = ViewBindings.findChildViewById(rootView, id);
+      if (roleDropdownLayout == null) {
         break missingId;
       }
 
-      return new ActivitySetupBinding((ScrollView) rootView, btnStart, etName, spRole);
+      return new ActivitySetupBinding((ScrollView) rootView, actvRole, btnStart, etName,
+          roleDropdownLayout);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

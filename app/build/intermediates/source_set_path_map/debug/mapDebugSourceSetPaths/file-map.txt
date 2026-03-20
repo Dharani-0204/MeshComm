@@ -1,0 +1,58 @@
+com.meshcomm.app-pngs-0 C:\Unknown Files\Hackathon\MeshComm\app\build\generated\res\pngs\debug
+com.meshcomm.app-resValues-1 C:\Unknown Files\Hackathon\MeshComm\app\build\generated\res\resValues\debug
+com.meshcomm.app-packageDebugResources-2 C:\Unknown Files\Hackathon\MeshComm\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.meshcomm.app-packageDebugResources-3 C:\Unknown Files\Hackathon\MeshComm\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.meshcomm.app-debug-4 C:\Unknown Files\Hackathon\MeshComm\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.meshcomm.app-debug-5 C:\Unknown Files\Hackathon\MeshComm\app\src\debug\res
+com.meshcomm.app-main-6 C:\Unknown Files\Hackathon\MeshComm\app\src\main\res
+com.meshcomm.app-jetified-lifecycle-livedata-ktx-2.7.0-7 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\0109a99af9db50932871accd18156ec5\transformed\jetified-lifecycle-livedata-ktx-2.7.0\res
+com.meshcomm.app-jetified-activity-1.8.2-8 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\01f950bb4b5dbdfede064f9b39ca29d3\transformed\jetified-activity-1.8.2\res
+com.meshcomm.app-lifecycle-livedata-2.7.0-9 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\066638e8355581a4233abeaf8abadc0d\transformed\lifecycle-livedata-2.7.0\res
+com.meshcomm.app-recyclerview-1.3.2-10 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\0b8cf50ee9403336565666fa0823c015\transformed\recyclerview-1.3.2\res
+com.meshcomm.app-jetified-play-services-basement-18.1.0-11 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\0c719729f7d044b7dbc05074f6ea40d9\transformed\jetified-play-services-basement-18.1.0\res
+com.meshcomm.app-jetified-emoji2-views-helper-1.2.0-12 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\1bd93fabafd4da8e07f8c853878aa46c\transformed\jetified-emoji2-views-helper-1.2.0\res
+com.meshcomm.app-jetified-lifecycle-viewmodel-savedstate-2.7.0-13 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\1cd55f079835daf69ff9c47e3271b138\transformed\jetified-lifecycle-viewmodel-savedstate-2.7.0\res
+com.meshcomm.app-material-1.12.0-14 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\273afa7a72ff4666fa714c264b941164\transformed\material-1.12.0\res
+com.meshcomm.app-appcompat-1.6.1-15 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\27f732d31d6dd5ae0aa44fb51430fa09\transformed\appcompat-1.6.1\res
+com.meshcomm.app-core-runtime-2.2.0-16 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\28f4bc7a7caf0a285b11bcdf6d0e4026\transformed\core-runtime-2.2.0\res
+com.meshcomm.app-constraintlayout-2.1.4-17 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\2bf23a8d06f40ad67e9f259300dd40d5\transformed\constraintlayout-2.1.4\res
+com.meshcomm.app-jetified-activity-ktx-1.8.2-18 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\34b347e55f62178192092fe50c1842b0\transformed\jetified-activity-ktx-1.8.2\res
+com.meshcomm.app-jetified-play-services-base-18.1.0-19 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\34dec5b0b46e7eea9fca490e26d85a1a\transformed\jetified-play-services-base-18.1.0\res
+com.meshcomm.app-coordinatorlayout-1.1.0-20 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\35ca1205614cdc1674919223fe1c0e86\transformed\coordinatorlayout-1.1.0\res
+com.meshcomm.app-navigation-ui-2.7.6-21 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\3eb59b2220b7cb0feb3187d85e3a404c\transformed\navigation-ui-2.7.6\res
+com.meshcomm.app-drawerlayout-1.1.1-22 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\41aa7b2102484732ae85110dd4ce857f\transformed\drawerlayout-1.1.1\res
+com.meshcomm.app-navigation-fragment-ktx-2.7.6-23 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\443d2082aef49cdbef2d526b27d6caaf\transformed\navigation-fragment-ktx-2.7.6\res
+com.meshcomm.app-navigation-common-ktx-2.7.6-24 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\44f21269aa1be3cb2156bb0255b1feef\transformed\navigation-common-ktx-2.7.6\res
+com.meshcomm.app-jetified-appcompat-resources-1.6.1-25 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\452789597740374d09c16250cd7980f9\transformed\jetified-appcompat-resources-1.6.1\res
+com.meshcomm.app-jetified-viewpager2-1.1.0-beta02-26 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\5813ef8964256728aa2ac368b1e6f0d1\transformed\jetified-viewpager2-1.1.0-beta02\res
+com.meshcomm.app-jetified-startup-runtime-1.1.1-27 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\5ddc95a871ce220aebf49410a3f2c05c\transformed\jetified-startup-runtime-1.1.1\res
+com.meshcomm.app-jetified-lifecycle-viewmodel-ktx-2.7.0-28 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\6444997b385ba597e2d86b6d12dc208f\transformed\jetified-lifecycle-viewmodel-ktx-2.7.0\res
+com.meshcomm.app-sqlite-framework-2.4.0-29 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\66f4f3507971e516c94c3c9ca32a5ba2\transformed\sqlite-framework-2.4.0\res
+com.meshcomm.app-navigation-fragment-2.7.6-30 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\705285d8f1a2c0ece277546fdf0c674d\transformed\navigation-fragment-2.7.6\res
+com.meshcomm.app-lifecycle-livedata-core-2.7.0-31 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\7263abd579218a2bf7c89a3774bcd21e\transformed\lifecycle-livedata-core-2.7.0\res
+com.meshcomm.app-navigation-ui-ktx-2.7.6-32 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\735bae1cb6e0118358a9811142c1f01b\transformed\navigation-ui-ktx-2.7.6\res
+com.meshcomm.app-jetified-lifecycle-process-2.7.0-33 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\7800b3338be9a1e871fef185d883abcb\transformed\jetified-lifecycle-process-2.7.0\res
+com.meshcomm.app-jetified-lifecycle-livedata-core-ktx-2.7.0-34 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\819020495e48fc33368ee87a2a706e62\transformed\jetified-lifecycle-livedata-core-ktx-2.7.0\res
+com.meshcomm.app-jetified-savedstate-ktx-1.2.1-35 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\85815826fd74dce42c2c8ad01625dad6\transformed\jetified-savedstate-ktx-1.2.1\res
+com.meshcomm.app-jetified-fragment-ktx-1.6.2-36 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\8cab1938fa2c80e3e328186b44ceb83a\transformed\jetified-fragment-ktx-1.6.2\res
+com.meshcomm.app-fragment-1.6.2-37 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\90381969e716a125b35258debc66dcfb\transformed\fragment-1.6.2\res
+com.meshcomm.app-jetified-lifecycle-runtime-ktx-2.7.0-38 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\95dd0a4906941bf09b47217f6b3dbebb\transformed\jetified-lifecycle-runtime-ktx-2.7.0\res
+com.meshcomm.app-jetified-profileinstaller-1.3.0-39 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\961bdd53833f18a42b118e0c7659a91c\transformed\jetified-profileinstaller-1.3.0\res
+com.meshcomm.app-cardview-1.0.0-40 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\9efe9493a4445d74ea42b466a383fd38\transformed\cardview-1.0.0\res
+com.meshcomm.app-transition-1.5.0-41 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a69672a138c4c1c96500b8d13ad0895a\transformed\transition-1.5.0\res
+com.meshcomm.app-jetified-room-ktx-2.6.1-42 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a779a82e3f7c8ac009c95ad0f40c7121\transformed\jetified-room-ktx-2.6.1\res
+com.meshcomm.app-jetified-emoji2-1.2.0-43 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\a77bb959001044ef41180bf77d395c10\transformed\jetified-emoji2-1.2.0\res
+com.meshcomm.app-jetified-savedstate-1.2.1-44 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\ad84d4c89437c0d41c4a79f733413669\transformed\jetified-savedstate-1.2.1\res
+com.meshcomm.app-lifecycle-viewmodel-2.7.0-45 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\aeacbcc269f4930abea3710ae11fe74c\transformed\lifecycle-viewmodel-2.7.0\res
+com.meshcomm.app-sqlite-2.4.0-46 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\b31110bfb57188bd2e87b6b12c2b3c71\transformed\sqlite-2.4.0\res
+com.meshcomm.app-jetified-window-1.0.0-47 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\b616f629dfafb56898c2e10a31e0ad9d\transformed\jetified-window-1.0.0\res
+com.meshcomm.app-lifecycle-runtime-2.7.0-48 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\bf2a0f0deacca12ac85d6be7ebfd73e3\transformed\lifecycle-runtime-2.7.0\res
+com.meshcomm.app-navigation-runtime-2.7.6-49 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\c63201ef58536afeba013735f0bb2ad4\transformed\navigation-runtime-2.7.6\res
+com.meshcomm.app-jetified-core-ktx-1.13.0-50 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\c695bfba47c924bb2712ce1fd0b4a4b4\transformed\jetified-core-ktx-1.13.0\res
+com.meshcomm.app-room-runtime-2.6.1-51 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\cd659df22129d0ddef8e6aa073b46529\transformed\room-runtime-2.6.1\res
+com.meshcomm.app-core-1.13.0-52 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\da76ab554b8d347a1c1cfe2870e18c29\transformed\core-1.13.0\res
+com.meshcomm.app-slidingpanelayout-1.2.0-53 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\de827cfe340b25a1bf759d3291ff5fb9\transformed\slidingpanelayout-1.2.0\res
+com.meshcomm.app-navigation-runtime-ktx-2.7.6-54 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\df3743ab37885fa4351931592019d877\transformed\navigation-runtime-ktx-2.7.6\res
+com.meshcomm.app-jetified-customview-poolingcontainer-1.0.0-55 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\edf89d52ee337786d402fe1e7ee9fd2f\transformed\jetified-customview-poolingcontainer-1.0.0\res
+com.meshcomm.app-jetified-annotation-experimental-1.4.0-56 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\f043f62e0733045c4264fc87dd6d3017\transformed\jetified-annotation-experimental-1.4.0\res
+com.meshcomm.app-navigation-common-2.7.6-57 C:\Users\iamsh\.gradle\caches\8.14.4\transforms\f8439acfafcbeccbdeae81764345c7ad\transformed\navigation-common-2.7.6\res

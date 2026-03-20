@@ -24,6 +24,9 @@ public final class FragmentBroadcastBinding implements ViewBinding {
   private final LinearLayout rootView;
 
   @NonNull
+  public final MaterialButton btnMic;
+
+  @NonNull
   public final MaterialButton btnSend;
 
   @NonNull
@@ -38,10 +41,12 @@ public final class FragmentBroadcastBinding implements ViewBinding {
   @NonNull
   public final TextView tvPeerCountHeader;
 
-  private FragmentBroadcastBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton btnSend,
-      @NonNull TextInputEditText etMessage, @NonNull RecyclerView rvMessages,
-      @NonNull SwitchCompat switchLocation, @NonNull TextView tvPeerCountHeader) {
+  private FragmentBroadcastBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton btnMic,
+      @NonNull MaterialButton btnSend, @NonNull TextInputEditText etMessage,
+      @NonNull RecyclerView rvMessages, @NonNull SwitchCompat switchLocation,
+      @NonNull TextView tvPeerCountHeader) {
     this.rootView = rootView;
+    this.btnMic = btnMic;
     this.btnSend = btnSend;
     this.etMessage = etMessage;
     this.rvMessages = rvMessages;
@@ -76,6 +81,12 @@ public final class FragmentBroadcastBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btnMic;
+      MaterialButton btnMic = ViewBindings.findChildViewById(rootView, id);
+      if (btnMic == null) {
+        break missingId;
+      }
+
       id = R.id.btnSend;
       MaterialButton btnSend = ViewBindings.findChildViewById(rootView, id);
       if (btnSend == null) {
@@ -106,8 +117,8 @@ public final class FragmentBroadcastBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentBroadcastBinding((LinearLayout) rootView, btnSend, etMessage, rvMessages,
-          switchLocation, tvPeerCountHeader);
+      return new FragmentBroadcastBinding((LinearLayout) rootView, btnMic, btnSend, etMessage,
+          rvMessages, switchLocation, tvPeerCountHeader);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
