@@ -69,22 +69,97 @@
             android:visibility="gone"/>
 
         <!-- Content Area -->
-        <LinearLayout
-            android:id="@+id/locationContent"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:layout_weight="1">
 
-            <!-- Location Overview -->
+            <!-- OSMDroid Map View -->
+            <org.osmdroid.views.MapView
+                android:id="@+id/mapView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="visible"/>
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🗺️"
+                    android:textSize="64sp"
+                    android:layout_marginBottom="16dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Location permission required"
+                    android:textColor="@color/md_theme_onSurfaceVariant"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Enable location access to view the map"
+                    android:textColor="@color/md_theme_onSurfaceVariant"
+                    android:textSize="14sp"
+                    android:gravity="center"/>
+            </LinearLayout>
+
+            <!-- Map Controls Overlay -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:layout_margin="16dp"
+                android:orientation="vertical"
+                android:background="@android:color/transparent">
+
+                <!-- Download Telangana Map Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDownloadMap"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Download Telangana Map"
+                    android:textSize="12sp"
+                    style="@style/Widget.Material3.Button.ElevatedButton"
+                    app:icon="@android:drawable/stat_sys_download"
+                    app:iconGravity="start"
+                    app:cornerRadius="20dp"
+                    android:layout_marginBottom="8dp"/>
+
+                <!-- Center on Location Button -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabCenterLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@android:drawable/ic_menu_mylocation"
+                    app:fabSize="mini"
+                    app:backgroundTint="@color/md_theme_primaryContainer"
+                    app:tint="@color/md_theme_onPrimaryContainer"
+                    android:contentDescription="Center on my location"/>
+            </LinearLayout>
+
+            <!-- Download Progress Card -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/downloadProgressCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
                 android:layout_margin="16dp"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/md_theme_surfaceContainer">
+                app:cardElevation="4dp"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -96,122 +171,34 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:gravity="center_vertical">
 
                         <TextView
+                            android:id="@+id/tvDownloadStatus"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="📍 Location Overview"
-                            android:textColor="@color/md_theme_onSurface"
-                            android:textSize="16sp"
+                            android:text="Downloading map tiles..."
+                            android:textSize="14sp"
                             android:textStyle="bold"/>
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnEmergencyZones"
+                        <TextView
+                            android:id="@+id/tvDownloadProgress"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:text="Emergency Zones"
-                            android:textSize="12sp"
-                            style="@style/Widget.Material3.Button.OutlinedButton"
-                            app:strokeColor="#FF3B30"
-                            app:cornerRadius="18dp"
-                            android:visibility="gone"/>
-
+                            android:layout_height="wrap_content"
+                            android:text="0%"
+                            android:textSize="12sp"/>
                     </LinearLayout>
 
-                    <ScrollView
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressBar"
                         android:layout_width="match_parent"
-                        android:layout_height="200dp">
-
-                        <TextView
-                            android:id="@+id/tvLocationOverview"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Loading location data..."
-                            android:textSize="13sp"
-                            android:fontFamily="monospace"
-                            android:textColor="@color/md_theme_onSurface"/>
-
-                    </ScrollView>
-
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:indicatorColor="@color/md_theme_primary"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-            <!-- SOS Alerts Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
-                android:paddingBottom="8dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="🚨 SOS Alerts"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#FF3B30"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tap to view details"
-                    android:textSize="12sp"
-                    android:textColor="@color/md_theme_onSurfaceVariant"/>
-
-            </LinearLayout>
-
-            <!-- SOS Alerts List -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvSosList"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:padding="16dp"
-                android:clipToPadding="false"/>
-
-        </LinearLayout>
-
-        <!-- Empty State -->
-        <LinearLayout
-            android:id="@+id/emptyState"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="32dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🗺️"
-                android:textSize="64sp"
-                android:layout_marginBottom="16dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="No location data available"
-                android:textColor="@color/md_theme_onSurfaceVariant"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Messages with GPS enabled will appear here.\nUse the SOS button for emergency alerts with location."
-                android:textColor="@color/md_theme_onSurfaceVariant"
-                android:textSize="14sp"
-                android:gravity="center"/>
-
-        </LinearLayout>
+        </FrameLayout>
 
     </LinearLayout>
 
