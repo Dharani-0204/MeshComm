@@ -74,7 +74,20 @@ class SetupActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(code: Int, perms: Array<String>, grants: IntArray) {
         super.onRequestPermissionsResult(code, perms, grants)
-        goHome()
+
+        // Check if all permissions were granted
+        if (grants.isNotEmpty() && grants.all { it == PackageManager.PERMISSION_GRANTED }) {
+            goHome()
+        } else {
+            // Show dialog explaining why permissions are needed
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Permissions Required")
+                .setMessage("MeshComm needs Bluetooth and Location permissions to connect with nearby devices. Without these, the app cannot function.")
+                .setPositiveButton("Grant Permissions") { _, _ -> requestPermissionsAndProceed() }
+                .setNegativeButton("Exit") { _, _ -> finish() }
+                .setCancelable(false)
+                .show()
+        }
     }
 
     private fun goHome() {

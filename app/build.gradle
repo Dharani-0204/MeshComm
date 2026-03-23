@@ -76,6 +76,12 @@ dependencies {
     // RecyclerView
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
 
+    // OSMDroid for offline maps
+    implementation 'org.osmdroid:osmdroid-android:6.1.18'
+
+    // OkHttp for tile downloading
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
 }
