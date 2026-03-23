@@ -5,6 +5,7 @@ import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import com.meshcomm.data.model.Message
 import com.meshcomm.data.model.MessageType
 import com.meshcomm.location.LocationProvider
@@ -18,8 +19,16 @@ class SOSManager(
     private val router: MessageRouter,
     private val locationProvider: LocationProvider
 ) {
+    companion object {
+        private const val TAG = "SOSManager"
+    }
+
     fun sendSOS(customMessage: String = "EMERGENCY! I need help!") {
         val (lat, lon) = locationProvider.getLastLatLon()
+        val connectedDevices = PeerRegistry.getConnectedCount()
+
+        Log.i(TAG, "Sending SOS: message='$customMessage', location=($lat,$lon), connectedDevices=$connectedDevices")
+
         val msg = Message(
             senderId = PrefsHelper.getUserId(context),
             senderName = PrefsHelper.getUserName(context),
@@ -29,15 +38,18 @@ class SOSManager(
             latitude = lat,
             longitude = lon,
             batteryLevel = BatteryHelper.getLevel(context),
-            nearbyDevicesCount = PeerRegistry.getConnectedCount(),
+            nearbyDevicesCount = connectedDevices,
             ttl = 10           // extra hops for SOS
         )
         router.sendMessage(msg)
-        triggerLocalAlert()
+        Log.d(TAG, "SOS sent to router: id=${msg.messageId}, will be broadcast to ALL connected devices")
+        // DO NOT trigger alert on sender device - only receivers should get alerted
+        // triggerLocalAlert() removed to prevent sender self-notification
     }
 
     /** Play alert + vibrate on the RECEIVING device */
     fun triggerSOSAlert() {
+        Log.d(TAG, "Triggering SOS alert (vibration + sound)")
         triggerLocalAlert()
     }
 
@@ -56,6 +68,8 @@ class SOSManager(
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
             ring.play()
-        } catch (e: Exception) { e.printStackTrace() }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error playing ringtone: ${e.message}")
+        }
     }
 }
