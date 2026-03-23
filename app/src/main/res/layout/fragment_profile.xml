@@ -31,7 +31,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="👤  Your Identity"
+                    android:text="Your Identity"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/md_theme_onSurface"
@@ -77,7 +77,7 @@
                         android:id="@+id/chipBattery"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🔋 Loading..."
+                        android:text="Loading..."
                         android:textColor="@color/md_theme_onPrimaryContainer"
                         app:chipBackgroundColor="@color/md_theme_primaryContainer"
                         app:chipStrokeWidth="0dp"
@@ -87,7 +87,7 @@
                         android:id="@+id/chipRelay"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="📡 Relay: OFF"
+                        android:text="Relay: OFF"
                         android:textColor="@color/md_theme_onSecondaryContainer"
                         app:chipBackgroundColor="@color/md_theme_secondaryContainer"
                         app:chipStrokeWidth="0dp"/>
@@ -115,7 +115,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📡  Mesh Network Status"
+                    android:text="Mesh Network Status"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="?attr/colorOnSurface"
@@ -191,7 +191,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="✏️  Edit Name"
+                    android:text="Edit Name"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="?attr/colorOnSurface"
@@ -248,55 +248,116 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="🚨  Emergency Contacts"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/sos_red"
-                    android:layout_marginBottom="4dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="4dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Emergency Contacts"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/sos_red"/>
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipContactCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="12sp"
+                        app:chipBackgroundColor="@color/sos_red"
+                        android:textColor="@android:color/white"
+                        app:chipMinHeight="24dp"/>
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="These contacts will be notified when you send an SOS"
+                    android:text="These contacts will receive SMS alerts when you send an SOS"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginBottom="12dp"/>
 
-                <com.google.android.material.textfield.TextInputLayout
+                <!-- Contacts List Preview -->
+                <LinearLayout
+                    android:id="@+id/contactsListContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Comma-separated user IDs"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone"/>
+
+                <!-- Empty State -->
+                <TextView
+                    android:id="@+id/tvNoContacts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="No emergency contacts selected.\nTap below to add contacts from your phone."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center"
+                    android:padding="16dp"
+                    android:background="@drawable/bg_dashed_border"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- Hidden EditText for backwards compatibility -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilEmergencyContacts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Manual entry (comma-separated)"
                     style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     app:boxStrokeColor="@color/sos_red"
-                    app:hintTextColor="?attr/colorOnSurfaceVariant"
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxCornerRadiusTopEnd="12dp"
                     app:boxCornerRadiusBottomStart="12dp"
                     app:boxCornerRadiusBottomEnd="12dp"
-                    app:helperText="e.g. abc123, def456"
-                    android:layout_marginBottom="16dp">
+                    app:helperText="e.g. +919876543210, +918765432109"
+                    android:visibility="gone"
+                    android:layout_marginBottom="12dp">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etEmergencyContacts"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"
+                        android:inputType="phone"
                         android:textColor="?attr/colorOnSurface"
                         android:maxLines="2"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSaveContacts"
-                    android:layout_width="wrap_content"
+                <!-- Buttons Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Save Contacts"
-                    app:icon="@android:drawable/ic_menu_save"
-                    app:backgroundTint="@color/sos_red"
-                    android:textColor="@android:color/white"/>
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPickContacts"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Select from Phone"
+                        app:icon="@android:drawable/ic_menu_add"
+                        app:backgroundTint="@color/sos_red"
+                        android:textColor="@android:color/white"
+                        android:layout_marginEnd="8dp"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSaveContacts"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Save"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:visibility="gone"/>
+
+                </LinearLayout>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

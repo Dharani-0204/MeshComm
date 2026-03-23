@@ -5,13 +5,17 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.provider.ContactsContract
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -20,9 +24,21 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.meshcomm.databinding.FragmentSosBinding
 import com.meshcomm.ui.broadcast.MessageAdapter
 import com.meshcomm.ui.home.MeshViewModel
+import com.meshcomm.utils.EmergencyContactsManager
+import com.meshcomm.utils.GeocoderUtil
+import com.meshcomm.utils.PrefsHelper
+import com.meshcomm.utils.SmsHelper
 import com.meshcomm.utils.SpeechToTextHelper
 
+data class EmergencyContact(val name: String, val phone: String)
+
 class SOSFragment : Fragment() {
+
+    companion object {
+        private const val TAG = "SOSFragment"
+        private const val REQUEST_READ_CONTACTS = 101
+        private const val REQUEST_SMS_PERMISSION = 201
+    }
 
     private var _binding: FragmentSosBinding? = null
     private val binding get() = _binding!!
@@ -30,29 +46,44 @@ class SOSFragment : Fragment() {
     private lateinit var adapter: MessageAdapter
     private var speechHelper: SpeechToTextHelper? = null
     private var vibrator: Vibrator? = null
+    private var selectedEmergencyContacts = mutableListOf<EmergencyContact>()
+    private var lastSentLocation: Location? = null
+
+    // Track SMS results
+    private val smsResults = mutableListOf<SmsHelper.SmsResult>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, saved: Bundle?): View {
+        Log.d(TAG, "SOSFragment onCreateView")
         _binding = FragmentSosBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Log.d(TAG, "SOSFragment onViewCreated")
         setupVibrator()
         setupRecyclerView()
         setupSpeechToText()
         observeData()
         setupClickListeners()
+        checkSmsPermission()
+    }
+
+    private fun checkSmsPermission() {
+        if (!SmsHelper.hasSmsPermission(requireContext())) {
+            Log.d(TAG, "SMS permission not granted - will request when needed")
+        }
     }
 
     private fun setupVibrator() {
         vibrator = requireContext().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        Log.d(TAG, "Vibrator initialized: hasVibrator=${vibrator?.hasVibrator()}")
     }
 
     private fun setupRecyclerView() {
         adapter = MessageAdapter(requireContext())
         binding.rvSosAlerts.apply {
             layoutManager = LinearLayoutManager(requireContext()).apply {
-                reverseLayout = true // Show newest first for emergency
+                reverseLayout = true
                 stackFromEnd = false
             }
             adapter = this@SOSFragment.adapter
@@ -75,12 +106,10 @@ class SOSFragment : Fragment() {
     }
 
     private fun observeData() {
-        // Observe SOS messages
         viewModel.sosMessages.asLiveData().observe(viewLifecycleOwner) { msgs ->
             adapter.submitList(msgs.sortedByDescending { it.timestamp })
             binding.tvSosCount.text = "${msgs.size} SOS alert(s) received"
-            
-            // Show/hide empty state
+
             if (msgs.isEmpty()) {
                 binding.emptyState.visibility = View.VISIBLE
                 binding.rvSosAlerts.visibility = View.GONE
@@ -90,140 +119,284 @@ class SOSFragment : Fragment() {
             }
         }
 
-        // Observe mesh stats
         viewModel.meshStats.observe(viewLifecycleOwner) { stats ->
             binding.tvMeshStatus.text = if (stats.isActive) {
-                "🟢 Mesh active • ${stats.connectedCount} devices"
+                "Mesh active - ${stats.connectedCount} devices"
             } else {
-                "🔴 Mesh offline • Searching..."
+                "Mesh offline - Searching..."
             }
         }
     }
 
     private fun setupClickListeners() {
-        // Main SOS button
         binding.btnSOS.setOnClickListener {
             sendSOS(false)
         }
 
-        // Critical SOS (long press)
         binding.btnSOS.setOnLongClickListener {
             sendSOS(true)
             true
         }
 
-        // Speech-to-text button
         binding.btnMic.setOnClickListener {
             binding.btnMic.isEnabled = false
             speechHelper?.startListening()
-            Toast.makeText(requireContext(), "🎤 Listening for emergency message...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Listening for emergency message...", Toast.LENGTH_SHORT).show()
         }
 
-        // Quick SOS buttons
         binding.btnQuickMedical.setOnClickListener {
-            sendQuickSOS("🏥 MEDICAL EMERGENCY - Need immediate medical assistance!")
+            sendQuickSOS("MEDICAL EMERGENCY - Need immediate medical assistance!")
         }
 
         binding.btnQuickFire.setOnClickListener {
-            sendQuickSOS("🔥 FIRE EMERGENCY - Fire hazard requiring evacuation!")
+            sendQuickSOS("FIRE EMERGENCY - Fire hazard requiring evacuation!")
         }
 
         binding.btnQuickSafety.setOnClickListener {
-            sendQuickSOS("⚠️ SAFETY EMERGENCY - Dangerous situation requiring help!")
+            sendQuickSOS("SAFETY EMERGENCY - Dangerous situation requiring help!")
         }
     }
 
     private fun sendSOS(isCritical: Boolean) {
+        Log.d(TAG, "sendSOS called - isCritical: $isCritical")
         val customMessage = binding.etSosMessage.text.toString().trim()
         val message = when {
             customMessage.isNotEmpty() -> customMessage
-            isCritical -> "🚨 CRITICAL EMERGENCY - Immediate assistance required!"
-            else -> "🆘 EMERGENCY - I need help!"
+            isCritical -> "CRITICAL EMERGENCY - Immediate assistance required!"
+            else -> "EMERGENCY - I need help!"
         }
 
-        // Get location if available
         val location = getCurrentLocation()
-        val locationText = if (location != null) {
-            " Location: ${location.latitude}, ${location.longitude}"
-        } else {
-            " Location: Unknown"
-        }
+        lastSentLocation = location
 
-        val fullMessage = message + locationText
-
-        // Send SOS
-        viewModel.sendSOS(fullMessage)
-
-        // Show confirmation
-        val confirmationText = if (isCritical) "CRITICAL SOS SENT!" else "SOS SENT!"
-        Toast.makeText(requireContext(), confirmationText, Toast.LENGTH_LONG).show()
-
-        // Haptic feedback
-        vibrateEmergency(isCritical)
-
-        // Clear input
-        binding.etSosMessage.setText("")
-
-        // Show success animation
-        binding.confirmationText.text = "✅ $confirmationText"
-        binding.confirmationText.visibility = View.VISIBLE
-        binding.confirmationText.postDelayed({
-            binding.confirmationText.visibility = View.GONE
-        }, 3000)
+        // Send immediately without contact selection dialog
+        executeSOS(message, isCritical)
     }
 
     private fun sendQuickSOS(message: String) {
-        val location = getCurrentLocation()
-        val locationText = if (location != null) {
-            " Location: ${location.latitude}, ${location.longitude}"
-        } else {
-            " Location: Unknown"
+        lastSentLocation = getCurrentLocation()
+        executeSOS(message, false)
+    }
+
+    private fun executeSOS(message: String, isCritical: Boolean) {
+        Log.i(TAG, "Executing SOS - sending via mesh and SMS")
+
+        // 1. Send via Bluetooth Mesh Network
+        val locationText = lastSentLocation?.let { loc ->
+            " Location: ${loc.latitude}, ${loc.longitude}"
+        } ?: " Location: Unknown"
+        val fullMessage = message + locationText
+
+        viewModel.sendSOS(fullMessage)
+        Log.d(TAG, "SOS sent to mesh network: $fullMessage")
+
+        // 2. Send SMS to all saved emergency contacts
+        sendSmsToEmergencyContacts(message)
+
+        // 3. Show confirmation
+        showSosConfirmation(isCritical)
+        binding.etSosMessage.setText("")
+    }
+
+    private fun sendSmsToEmergencyContacts(message: String) {
+        val savedContacts = EmergencyContactsManager.getContacts(requireContext())
+
+        if (savedContacts.isEmpty()) {
+            Log.w(TAG, "No saved emergency contacts for SMS")
+            return
         }
 
-        viewModel.sendSOS(message + locationText)
-        Toast.makeText(requireContext(), "Emergency alert sent!", Toast.LENGTH_LONG).show()
-        vibrateEmergency(false)
+        // Check SMS permission
+        if (!SmsHelper.hasSmsPermission(requireContext())) {
+            Log.w(TAG, "SMS permission not granted - requesting")
+            SmsHelper.requestSmsPermission(requireActivity())
+            Toast.makeText(
+                requireContext(),
+                "SMS permission needed to alert contacts",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        // Build SMS message with location
+        val senderName = PrefsHelper.getUserName(requireContext())
+        val (lat, lon) = lastSentLocation?.let { Pair(it.latitude, it.longitude) }
+            ?: Pair(0.0, 0.0)
+        val address = if (lat != 0.0 || lon != 0.0) {
+            GeocoderUtil.getShortAddress(requireContext(), lat, lon)
+        } else null
+
+        val smsMessage = SmsHelper.buildSosMessage(
+            senderName = senderName,
+            latitude = lat,
+            longitude = lon,
+            address = address,
+            customMessage = message
+        )
+
+        Log.i(TAG, "Sending SMS to ${savedContacts.size} emergency contacts")
+        smsResults.clear()
+
+        val phoneNumbers = savedContacts.map { it.phone }
+        SmsHelper.sendSmsToMultiple(
+            context = requireContext(),
+            phoneNumbers = phoneNumbers,
+            message = smsMessage,
+            callback = object : SmsHelper.SmsCallback {
+                override fun onSmsSent(result: SmsHelper.SmsResult) {
+                    smsResults.add(result)
+                    val status = if (result.success) "SENT" else "FAILED"
+                    Log.d(TAG, "SMS to ${result.phoneNumber}: $status")
+                }
+
+                override fun onAllSmsCompleted(results: List<SmsHelper.SmsResult>) {
+                    val successCount = results.count { it.success }
+                    val failCount = results.size - successCount
+                    Log.i(TAG, "SMS completed: $successCount sent, $failCount failed")
+
+                    activity?.runOnUiThread {
+                        if (failCount > 0) {
+                            Toast.makeText(
+                                requireContext(),
+                                "SMS: $successCount sent, $failCount failed",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    private fun showSosConfirmation(isCritical: Boolean) {
+        val confirmationText = if (isCritical) "CRITICAL SOS SENT!" else "SOS SENT!"
+        Log.i(TAG, "SOS confirmation: $confirmationText")
+        Toast.makeText(requireContext(), confirmationText, Toast.LENGTH_LONG).show()
+
+        vibrateEmergency(isCritical)
+
+        binding.confirmationText.text = confirmationText
+        binding.confirmationText.visibility = View.VISIBLE
+
+        // Show summary dialog
+        showSummaryDialog()
+
+        binding.confirmationText.postDelayed({
+            binding.confirmationText.visibility = View.GONE
+        }, 3000)
+
+        lastSentLocation = null
+    }
+
+    private fun showSummaryDialog() {
+        val savedContacts = EmergencyContactsManager.getContacts(requireContext())
+        val meshStatus = viewModel.meshStats.value
+
+        val addressText = lastSentLocation?.let { loc ->
+            val address = GeocoderUtil.getShortAddress(requireContext(), loc.latitude, loc.longitude)
+            "Location: $address"
+        } ?: "Location: Unknown"
+
+        val meshInfo = if (meshStatus?.isActive == true) {
+            "Mesh: Sent to ${meshStatus.connectedCount} devices"
+        } else {
+            "Mesh: Offline (will send when connected)"
+        }
+
+        val smsInfo = if (savedContacts.isNotEmpty()) {
+            val contactsList = savedContacts.joinToString("\n") { "  - ${it.name} (${it.phone})" }
+            "SMS sent to ${savedContacts.size} contacts:\n$contactsList"
+        } else {
+            "SMS: No emergency contacts saved\n(Add contacts in Profile tab)"
+        }
+
+        val message = """
+            |$addressText
+            |
+            |$meshInfo
+            |
+            |$smsInfo
+        """.trimMargin()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("SOS Alert Sent")
+            .setMessage(message)
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .show()
+
+        Log.i(TAG, "SOS Summary:\n$message")
     }
 
     private fun getCurrentLocation(): Location? {
+        Log.d(TAG, "Getting current location")
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            Log.w(TAG, "Location permission not granted")
             return null
         }
 
         val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return try {
-            locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                 ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            if (location != null) {
+                Log.d(TAG, "Location obtained: (${location.latitude}, ${location.longitude})")
+            } else {
+                Log.w(TAG, "No location available from GPS or Network provider")
+            }
+            location
         } catch (e: Exception) {
+            Log.e(TAG, "Error getting location: ${e.message}", e)
             null
         }
     }
 
     private fun vibrateEmergency(isCritical: Boolean) {
         if (vibrator?.hasVibrator() == true) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val pattern = if (isCritical) {
-                    // Strong vibration pattern for critical
                     VibrationEffect.createWaveform(longArrayOf(0, 500, 100, 500, 100, 500), -1)
                 } else {
-                    // Single strong vibration for normal SOS
                     VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE)
                 }
                 vibrator?.vibrate(pattern)
             } else {
-                // Fallback for older devices
                 @Suppress("DEPRECATION")
                 vibrator?.vibrate(if (isCritical) 1000 else 200)
             }
         }
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            REQUEST_READ_CONTACTS -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(requireContext(), "Contacts permission granted", Toast.LENGTH_SHORT).show()
+                }
+            }
+            REQUEST_SMS_PERMISSION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(requireContext(), "SMS permission granted", Toast.LENGTH_SHORT).show()
+                    Log.d(TAG, "SMS permission granted")
+                } else {
+                    Toast.makeText(requireContext(), "SMS permission denied - cannot send SMS alerts", Toast.LENGTH_LONG).show()
+                    Log.w(TAG, "SMS permission denied")
+                }
+            }
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        Log.d(TAG, "SOSFragment onDestroyView")
         speechHelper?.destroy()
         _binding = null
     }

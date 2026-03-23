@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ResQNet Launcher Icon - Simplified for small sizes -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Shield Base (Red for emergency) -->
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M54,20L35,28L35,50Q35,65 54,76Q73,65 73,50L73,28Z"/>
+
+    <!-- Shield Inner Highlight -->
+    <path
+        android:fillColor="#FF5252"
+        android:pathData="M54,24L40,30L40,48Q40,60 54,70Q68,60 68,48L68,30Z"/>
+
+    <!-- Location Pin -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,32Q58,32 61,35Q64,38 64,42Q64,46 54,56Q44,46 44,42Q44,38 47,35Q50,32 54,32Z"/>
+
+    <!-- Pin Center Dot -->
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M54,42m-2,0a2,2 0,1,1 4,0a2,2 0,1,1 -4,0"/>
+
+    <!-- Signal Waves (Simplified) -->
+    <path
+        android:strokeColor="#2196F3"
+        android:strokeWidth="2.5"
+        android:pathData="M25,54Q25,35 54,35Q83,35 83,54Q83,73 54,73Q25,73 25,54"/>
+
+    <path
+        android:strokeColor="#2196F3"
+        android:strokeWidth="2"
+        android:pathData="M18,54Q18,28 54,28Q90,28 90,54Q90,80 54,80Q18,80 18,54"/>
+
+    <!-- Mesh Connection Points (converted from circles to paths) -->
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M30,40m-2.5,0a2.5,2.5 0,1,1 5,0a2.5,2.5 0,1,1 -5,0"/>
+
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M78,40m-2.5,0a2.5,2.5 0,1,1 5,0a2.5,2.5 0,1,1 -5,0"/>
+
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M30,68m-2.5,0a2.5,2.5 0,1,1 5,0a2.5,2.5 0,1,1 -5,0"/>
+
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M78,68m-2.5,0a2.5,2.5 0,1,1 5,0a2.5,2.5 0,1,1 -5,0"/>
+
+</vector>
