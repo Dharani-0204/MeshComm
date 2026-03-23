@@ -1,9 +1,14 @@
 package com.meshcomm.mesh
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.*
 import android.bluetooth.le.*
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.location.LocationManager
 import android.os.ParcelUuid
 import android.util.Log
 import com.meshcomm.data.model.PeerDevice
@@ -24,6 +29,7 @@ class BluetoothMeshManager(
         private const val TAG = "BluetoothMeshManager"
         val SERVICE_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         val APP_UUID: UUID     = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
+        const val DISCOVERABLE_DURATION = 300 // 5 minutes
     }
 
     private val adapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
@@ -32,6 +38,75 @@ class BluetoothMeshManager(
     private var leAdvertiser: BluetoothLeAdvertiser? = null
     private var leScanner: BluetoothLeScanner? = null
     private val knownDevices = ConcurrentHashMap<String, BluetoothDevice>()
+
+    // ── Classic Bluetooth Discovery Receiver ─────────────────────────────────
+
+    private val discoveryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                BluetoothDevice.ACTION_FOUND -> {
+                    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                    device?.let {
+                        val deviceName = it.name ?: "Unknown"
+                        val deviceAddress = it.address
+                        val rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE).toInt()
+
+                        Log.d(TAG, "Classic BT device discovered: $deviceName ($deviceAddress) RSSI: $rssi")
+
+                        knownDevices[deviceAddress] = it
+                        if (!transportLayer.getConnectedIds().contains(deviceAddress)) {
+                            Log.d(TAG, "Auto-connecting to $deviceName...")
+                            connectToDevice(it)
+                        }
+                    }
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+                    Log.d(TAG, "Classic discovery started")
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                    Log.d(TAG, "Classic discovery finished (found ${knownDevices.size} total devices)")
+                }
+            }
+        }
+    }
+
+    init {
+        // Register discovery receiver
+        val filter = IntentFilter().apply {
+            addAction(BluetoothDevice.ACTION_FOUND)
+            addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
+            addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+        }
+        context.registerReceiver(discoveryReceiver, filter)
+        Log.d(TAG, "BluetoothMeshManager initialized, discovery receiver registered")
+    }
+
+    // ── Device State Checks ──────────────────────────────────────────────────
+
+    fun isBluetoothEnabled(): Boolean {
+        val enabled = adapter?.isEnabled == true
+        Log.d(TAG, "Bluetooth enabled: $enabled")
+        return enabled
+    }
+
+    fun isLocationEnabled(): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        val networkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        val enabled = gpsEnabled || networkEnabled
+        Log.d(TAG, "Location enabled: $enabled (GPS: $gpsEnabled, Network: $networkEnabled)")
+        return enabled
+    }
+
+    // ── Make Device Discoverable ─────────────────────────────────────────────
+
+    fun makeDiscoverable(activity: Activity) {
+        val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION)
+        }
+        activity.startActivityForResult(discoverableIntent, 1)
+        Log.d(TAG, "Requesting device discoverability for $DISCOVERABLE_DURATION seconds")
+    }
 
     // ── Classic RFCOMM Server ────────────────────────────────────────────────
 
@@ -123,6 +198,17 @@ class BluetoothMeshManager(
     // ── BLE Scanning ─────────────────────────────────────────────────────────
 
     fun startDiscovery() {
+        // Check prerequisites
+        if (!isBluetoothEnabled()) {
+            Log.e(TAG, "Cannot start discovery: Bluetooth is OFF")
+            return
+        }
+        if (!isLocationEnabled()) {
+            Log.e(TAG, "Cannot start discovery: Location/GPS is OFF (required for BLE scan)")
+            return
+        }
+
+        // Start BLE scan
         leScanner = adapter?.bluetoothLeScanner
         val filter = ScanFilter.Builder()
             .setServiceUuid(ParcelUuid(APP_UUID))
@@ -177,5 +263,6 @@ class BluetoothMeshManager(
         leAdvertiser?.stopAdvertising(advertiseCallback)
         adapter?.cancelDiscovery()
         runCatching { serverSocket?.close() }
+        runCatching { context.unregisterReceiver(discoveryReceiver) }
     }
 }

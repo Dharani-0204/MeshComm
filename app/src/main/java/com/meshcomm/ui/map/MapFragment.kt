@@ -114,7 +114,7 @@ class MapFragment : Fragment() {
             setTileSource(offlineTileProvider.getTileSource())
             setMultiTouchControls(true)
             minZoomLevel = 5.0
-            maxZoomLevel = 15.0
+            maxZoomLevel = 19.0  // Increased to 19 for street-level detail
 
             // Set initial view to Telangana
             controller.setZoom(8.0)
@@ -130,7 +130,7 @@ class MapFragment : Fragment() {
         binding.mapView.visibility = View.VISIBLE
         binding.emptyState.visibility = View.GONE
 
-        Log.d(TAG, "Map initialized and centered on Telangana")
+        Log.d(TAG, "Map initialized and centered on Telangana (zoom 5-19 supported)")
     }
 
     private fun setupMyLocationOverlay() {
@@ -230,8 +230,8 @@ class MapFragment : Fragment() {
         sosMessages.forEach { sos ->
             val marker = Marker(mapView).apply {
                 position = GeoPoint(sos.latitude, sos.longitude)
-                title = "🚨 ${sos.senderName}"
-                snippet = "${sos.content}\n🔋 ${sos.batteryLevel}% • ${formatTimestamp(sos.timestamp)}"
+                title = "🚨 SOS: ${sos.senderName}"
+                snippet = "${sos.content}\n📍 ${String.format("%.4f", sos.latitude)}, ${String.format("%.4f", sos.longitude)}\n🔋 ${sos.batteryLevel}% • ${formatTimestamp(sos.timestamp)}"
 
                 // Show info window on tap
                 setOnMarkerClickListener { clickedMarker, _ ->
@@ -241,17 +241,18 @@ class MapFragment : Fragment() {
                         "SOS from ${sos.senderName}: ${sos.content}",
                         Toast.LENGTH_LONG
                     ).show()
-                    Log.d(TAG, "SOS marker tapped: ${sos.senderName}")
+                    Log.d(TAG, "SOS marker tapped: ${sos.senderName} at ${sos.latitude},${sos.longitude}")
                     true
                 }
             }
 
             sosMarkers.add(marker)
             mapView.overlays.add(marker)
+            Log.d(TAG, "Added SOS marker: ${sos.senderName} at ${String.format("%.4f,%.4f", sos.latitude, sos.longitude)}")
         }
 
         mapView.invalidate()
-        Log.d(TAG, "Added ${sosMarkers.size} SOS markers to map")
+        Log.d(TAG, "Updated map with ${sosMarkers.size} SOS markers from ${sosMessages.size} messages")
     }
 
     private fun centerOnCurrentLocation() {

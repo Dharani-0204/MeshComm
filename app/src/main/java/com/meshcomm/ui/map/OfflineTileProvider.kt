@@ -20,7 +20,7 @@ class OfflineTileProvider(
         private const val TAG = "OfflineTileProvider"
         const val TILE_SOURCE_NAME = "TelanganaOfflineOSM"
         const val MIN_ZOOM = 5
-        const val MAX_ZOOM = 15
+        const val MAX_ZOOM = 18  // Increased to 18 for street-level detail
     }
 
     /**
