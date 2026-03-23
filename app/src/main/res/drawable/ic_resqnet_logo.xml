@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ResQNet App Logo - Shield + Location Pin + Signal Waves -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="144dp"
+    android:height="144dp"
+    android:viewportWidth="144"
+    android:viewportHeight="144">
+
+    <!-- Background Circle (White for clarity) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72,72m-70,0a70,70 0,1,1 140,0a70,70 0,1,1 -140,0"/>
+
+    <!-- Outer Border (Blue for trust) -->
+    <path
+        android:fillColor="#2196F3"
+        android:strokeWidth="4"
+        android:strokeColor="#1976D2"
+        android:pathData="M72,72m-66,0a66,66 0,1,1 132,0a66,66 0,1,1 -132,0"/>
+
+    <!-- Inner White Circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72,72m-62,0a62,62 0,1,1 124,0a62,62 0,1,1 -124,0"/>
+
+    <!-- Shield Base (Red for emergency) -->
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M72,25L50,35L50,65Q50,85 72,100Q94,85 94,65L94,35Z"/>
+
+    <!-- Shield Inner Highlight -->
+    <path
+        android:fillColor="#FF5252"
+        android:pathData="M72,30L55,38L55,63Q55,80 72,92Q89,80 89,63L89,38Z"/>
+
+    <!-- Location Pin -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72,35Q78,35 82,39Q86,43 86,49Q86,55 72,70Q58,55 58,49Q58,43 62,39Q66,35 72,35Z"/>
+
+    <!-- Pin Center Dot -->
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M72,49m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0"/>
+
+    <!-- Signal Waves (Mesh Network) -->
+    <!-- Wave 1 - Innermost -->
+    <path
+        android:strokeColor="#2196F3"
+        android:strokeWidth="2"
+        android:pathData="M30,72Q30,50 72,50Q114,50 114,72Q114,94 72,94Q30,94 30,72"/>
+
+    <!-- Wave 2 - Middle -->
+    <path
+        android:strokeColor="#2196F3"
+        android:strokeWidth="2"
+        android:pathData="M22,72Q22,42 72,42Q122,42 122,72Q122,102 72,102Q22,102 22,72"/>
+
+    <!-- Wave 3 - Outermost -->
+    <path
+        android:strokeColor="#2196F3"
+        android:strokeWidth="2"
+        android:pathData="M14,72Q14,34 72,34Q130,34 130,72Q130,110 72,110Q14,110 14,72"/>
+
+    <!-- Mesh Connection Points (converted from circles to paths) -->
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M35,55m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0"/>
+
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M109,55m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0"/>
+
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M35,89m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0"/>
+
+    <path
+        android:fillColor="#FF3B30"
+        android:pathData="M109,89m-3,0a3,3 0,1,1 6,0a3,3 0,1,1 -6,0"/>
+
+    <!-- Connection Lines -->
+    <path
+        android:strokeColor="#FF3B30"
+        android:strokeWidth="1.5"
+        android:pathData="M35,55L72,50L109,55M35,89L72,94L109,89"/>
+
+</vector>

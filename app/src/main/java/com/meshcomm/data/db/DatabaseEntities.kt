@@ -23,7 +23,8 @@ data class MessageEntity(
     val timestamp: Long,
     val ttl: Int,
     val status: String,
-    val isEncrypted: Boolean
+    val isEncrypted: Boolean,
+    val deviceId: String = ""
 )
 
 @Entity(tableName = "users")

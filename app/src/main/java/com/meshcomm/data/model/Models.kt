@@ -20,7 +20,8 @@ data class Message(
     val timestamp: Long = System.currentTimeMillis(),
     val ttl: Int = 7,
     val status: MessageStatus = MessageStatus.SENT,
-    val isEncrypted: Boolean = false
+    val isEncrypted: Boolean = false,
+    val deviceId: String = "" // Device identifier for self-filtering
 )
 
 data class User(

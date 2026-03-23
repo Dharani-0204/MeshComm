@@ -9,7 +9,13 @@
     <fragment
         android:id="@+id/nav_map"
         android:name="com.meshcomm.ui.map.MapFragment"
-        android:label="Map"/>
+        android:label="Map">
+
+        <!-- Navigate to SOS screen from Map -->
+        <action
+            android:id="@+id/action_map_to_sos"
+            app:destination="@id/nav_sos"/>
+    </fragment>
 
     <!-- MESH SCREEN - Broadcast communication -->
     <fragment
@@ -46,7 +52,16 @@
     <fragment
         android:id="@+id/nav_sos"
         android:name="com.meshcomm.ui.sos.SOSFragment"
-        android:label="SOS"/>
+        android:label="SOS">
+
+        <!-- Navigate back to Map with proper back stack preservation -->
+        <action
+            android:id="@+id/action_sos_to_map"
+            app:destination="@id/nav_map"
+            app:popUpTo="@id/nav_map"
+            app:popUpToInclusive="false"
+            app:launchSingleTop="true"/>
+    </fragment>
 
     <!-- PROFILE SCREEN - Settings/Info -->
     <fragment

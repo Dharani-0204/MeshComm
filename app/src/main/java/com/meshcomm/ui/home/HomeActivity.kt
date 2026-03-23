@@ -32,7 +32,7 @@ class HomeActivity : AppCompatActivity() {
         // Set default tab to Map (force navigation on startup)
         binding.bottomNav.selectedItemId = R.id.nav_map
 
-        // Handle back button - proper emergency app behavior
+        // Handle back button - proper emergency app behavior with fragment state preservation
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 when (navController.currentDestination?.id) {
@@ -41,12 +41,17 @@ class HomeActivity : AppCompatActivity() {
                         finish()
                     }
                     R.id.chatDetailFragment -> {
-                        // From chat detail, go back to chat list
-                        navController.navigate(R.id.nav_chat)
+                        // From chat detail, use proper navigation back to preserve state
+                        if (!navController.navigateUp()) {
+                            navController.navigate(R.id.nav_chat)
+                        }
                     }
                     else -> {
                         // From any other screen, go back to map (emergency default)
-                        navController.navigate(R.id.nav_map)
+                        // Use popBackStack to preserve fragment state if possible
+                        if (!navController.popBackStack(R.id.nav_map, false)) {
+                            navController.navigate(R.id.nav_map)
+                        }
                         binding.bottomNav.selectedItemId = R.id.nav_map
                     }
                 }

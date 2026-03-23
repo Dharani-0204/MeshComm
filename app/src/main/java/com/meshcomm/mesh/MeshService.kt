@@ -124,19 +124,26 @@ class MeshService : Service() {
         // Show notifications for incoming messages
         scope.launch {
             messageRouter.incomingMessages.collect { msg ->
+                val myDeviceId = PrefsHelper.getUserId(this@MeshService)
+
+                // Filter out self-generated messages to prevent self-notification
+                if (msg.deviceId == myDeviceId) {
+                    Log.d(TAG, "Ignoring self-generated message: ${msg.messageId}")
+                    return@collect
+                }
+
                 when (msg.type) {
                     MessageType.SOS -> {
-                        Log.i(TAG, "Received SOS message from ${msg.senderName}")
+                        Log.i(TAG, "Received SOS message from ${msg.senderName} (deviceId: ${msg.deviceId})")
+                        sosManager.triggerSOSAlert()
                         NotificationHelper.showSOSNotification(this@MeshService, msg.senderName)
                     }
                     MessageType.BROADCAST, MessageType.DIRECT -> {
-                        if (msg.senderId != PrefsHelper.getUserId(this@MeshService)) {
-                            Log.d(TAG, "Received ${msg.type} message from ${msg.senderName}")
-                            NotificationHelper.showMessageNotification(
-                                this@MeshService, msg.senderName,
-                                msg.content.take(60)
-                            )
-                        }
+                        Log.d(TAG, "Received ${msg.type} message from ${msg.senderName} (deviceId: ${msg.deviceId})")
+                        NotificationHelper.showMessageNotification(
+                            this@MeshService, msg.senderName,
+                            msg.content.take(60)
+                        )
                     }
                 }
             }
@@ -195,26 +202,30 @@ class MeshService : Service() {
 
     fun sendBroadcastMessage(content: String, includeLocation: Boolean) {
         val (lat, lon) = if (includeLocation) locationProvider.getLastLatLon() else Pair(0.0, 0.0)
+        val deviceId = PrefsHelper.getUserId(this)
         val msg = Message(
-            senderId = PrefsHelper.getUserId(this),
+            senderId = deviceId,
             senderName = PrefsHelper.getUserName(this),
             content = content,
             latitude = lat,
             longitude = lon,
             batteryLevel = BatteryHelper.getLevel(this),
             nearbyDevicesCount = PeerRegistry.getConnectedCount(),
-            type = MessageType.BROADCAST
+            type = MessageType.BROADCAST,
+            deviceId = deviceId
         )
         if (PeerRegistry.getConnectedCount() == 0) {
             storeAndForward.enqueue(msg)
         }
         messageRouter.sendMessage(msg)
+        Log.d(TAG, "Broadcast message sent with deviceId: $deviceId")
     }
 
     fun sendDirectMessage(targetId: String, targetName: String, content: String, includeLocation: Boolean) {
         val (lat, lon) = if (includeLocation) locationProvider.getLastLatLon() else Pair(0.0, 0.0)
+        val deviceId = PrefsHelper.getUserId(this)
         val msg = Message(
-            senderId = PrefsHelper.getUserId(this),
+            senderId = deviceId,
             senderName = PrefsHelper.getUserName(this),
             targetId = targetId,
             content = content,
@@ -222,12 +233,14 @@ class MeshService : Service() {
             longitude = lon,
             batteryLevel = BatteryHelper.getLevel(this),
             nearbyDevicesCount = PeerRegistry.getConnectedCount(),
-            type = MessageType.DIRECT
+            type = MessageType.DIRECT,
+            deviceId = deviceId
         )
         if (PeerRegistry.getConnectedCount() == 0) {
             storeAndForward.enqueue(msg)
         }
         messageRouter.sendMessage(msg)
+        Log.d(TAG, "Direct message sent to $targetId with deviceId: $deviceId")
     }
 
     fun sendSOS(customMessage: String = "EMERGENCY! I need help!") {

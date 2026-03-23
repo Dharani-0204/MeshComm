@@ -34,6 +34,9 @@ class MapFragment : Fragment() {
 
     companion object {
         private const val TAG = "MapFragment"
+        private const val KEY_CAMERA_LAT = "camera_lat"
+        private const val KEY_CAMERA_LON = "camera_lon"
+        private const val KEY_CAMERA_ZOOM = "camera_zoom"
     }
 
     private var _binding: FragmentMapBinding? = null
@@ -50,6 +53,11 @@ class MapFragment : Fragment() {
 
     // Telangana center: approximately 17.5°N, 79.5°E
     private val telanganaCenter = GeoPoint(17.5, 79.5)
+
+    // Saved camera position for state restoration
+    private var savedCameraLat: Double? = null
+    private var savedCameraLon: Double? = null
+    private var savedCameraZoom: Double? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -71,7 +79,27 @@ class MapFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Restore saved camera position
+        savedInstanceState?.let { bundle ->
+            savedCameraLat = bundle.getDouble(KEY_CAMERA_LAT, 0.0).takeIf { it != 0.0 }
+            savedCameraLon = bundle.getDouble(KEY_CAMERA_LON, 0.0).takeIf { it != 0.0 }
+            savedCameraZoom = bundle.getDouble(KEY_CAMERA_ZOOM, 0.0).takeIf { it != 0.0 }
+            Log.d(TAG, "Restored camera position: ($savedCameraLat, $savedCameraLon) zoom=$savedCameraZoom")
+        }
+
         checkPermissionsAndSetup()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Save current camera position
+        if (::mapView.isInitialized) {
+            val center = mapView.mapCenter
+            outState.putDouble(KEY_CAMERA_LAT, center.latitude)
+            outState.putDouble(KEY_CAMERA_LON, center.longitude)
+            outState.putDouble(KEY_CAMERA_ZOOM, mapView.zoomLevelDouble)
+            Log.d(TAG, "Saved camera position: (${center.latitude}, ${center.longitude}) zoom=${mapView.zoomLevelDouble}")
+        }
     }
 
     private fun checkPermissionsAndSetup() {
@@ -116,9 +144,17 @@ class MapFragment : Fragment() {
             minZoomLevel = 5.0
             maxZoomLevel = 19.0  // Increased to 19 for street-level detail
 
-            // Set initial view to Telangana
-            controller.setZoom(8.0)
-            controller.setCenter(telanganaCenter)
+            // Restore saved camera position or use default
+            if (savedCameraLat != null && savedCameraLon != null && savedCameraZoom != null) {
+                controller.setZoom(savedCameraZoom!!)
+                controller.setCenter(GeoPoint(savedCameraLat!!, savedCameraLon!!))
+                Log.d(TAG, "Map restored to saved position: ($savedCameraLat, $savedCameraLon) zoom=$savedCameraZoom")
+            } else {
+                // Set initial view to Telangana
+                controller.setZoom(8.0)
+                controller.setCenter(telanganaCenter)
+                Log.d(TAG, "Map initialized with default Telangana view")
+            }
         }
 
         // Setup location overlay
@@ -156,9 +192,10 @@ class MapFragment : Fragment() {
             centerOnCurrentLocation()
         }
 
-        // Floating SOS button
+        // Floating SOS button - use proper navigation action
         binding.fabSos.setOnClickListener {
-            findNavController().navigate(R.id.nav_sos)
+            Log.d(TAG, "SOS button clicked - navigating to SOS screen")
+            findNavController().navigate(R.id.action_map_to_sos)
         }
     }
 
@@ -226,33 +263,77 @@ class MapFragment : Fragment() {
         sosMarkers.forEach { mapView.overlays.remove(it) }
         sosMarkers.clear()
 
+        // Get current device ID to filter out own SOS
+        val myDeviceId = com.meshcomm.utils.PrefsHelper.getUserId(requireContext())
+
+        // Filter out self-SOS messages
+        val otherSosMessages = sosMessages.filter { it.deviceId != myDeviceId }
+
+        Log.d(TAG, "Updating markers: ${sosMessages.size} total SOS, ${otherSosMessages.size} from other devices")
+
         // Add new SOS markers
-        sosMessages.forEach { sos ->
+        otherSosMessages.forEach { sos ->
+            // Extract address from SOS message if available
+            // Format: "SOS|lat,lng|address|timestamp|deviceId|message"
+            val address = try {
+                val parts = sos.content.split("|")
+                if (parts.size >= 3) parts[2] else extractAddressFromCoords(sos)
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not parse address from SOS content: ${e.message}")
+                extractAddressFromCoords(sos)
+            }
+
             val marker = Marker(mapView).apply {
                 position = GeoPoint(sos.latitude, sos.longitude)
-                title = "🚨 SOS: ${sos.senderName}"
-                snippet = "${sos.content}\n📍 ${String.format("%.4f", sos.latitude)}, ${String.format("%.4f", sos.longitude)}\n🔋 ${sos.batteryLevel}% • ${formatTimestamp(sos.timestamp)}"
+                title = "🚨 SOS Alert"
+                snippet = "From: ${sos.senderName}\n📍 $address\n⏰ ${formatTimestamp(sos.timestamp)}\n🔋 ${sos.batteryLevel}%"
 
                 // Show info window on tap
                 setOnMarkerClickListener { clickedMarker, _ ->
                     clickedMarker.showInfoWindow()
+                    val fullMessage = extractMessageContent(sos.content)
                     Toast.makeText(
                         requireContext(),
-                        "SOS from ${sos.senderName}: ${sos.content}",
+                        "SOS from ${sos.senderName}: $fullMessage",
                         Toast.LENGTH_LONG
                     ).show()
-                    Log.d(TAG, "SOS marker tapped: ${sos.senderName} at ${sos.latitude},${sos.longitude}")
+                    Log.d(TAG, "SOS marker tapped: ${sos.senderName} from $address")
                     true
                 }
             }
 
             sosMarkers.add(marker)
             mapView.overlays.add(marker)
-            Log.d(TAG, "Added SOS marker: ${sos.senderName} at ${String.format("%.4f,%.4f", sos.latitude, sos.longitude)}")
+            Log.d(TAG, "Added SOS marker: ${sos.senderName} at $address (${sos.latitude},${sos.longitude})")
         }
 
         mapView.invalidate()
-        Log.d(TAG, "Updated map with ${sosMarkers.size} SOS markers from ${sosMessages.size} messages")
+        Log.d(TAG, "Updated map with ${sosMarkers.size} SOS markers (filtered ${sosMessages.size - otherSosMessages.size} self-SOS)")
+    }
+
+    private fun extractAddressFromCoords(sos: Message): String {
+        Log.d(TAG, "Extracting address from coordinates: (${sos.latitude}, ${sos.longitude})")
+        return if (sos.latitude != 0.0 && sos.longitude != 0.0) {
+            val address = com.meshcomm.utils.GeocoderUtil.getShortAddress(requireContext(), sos.latitude, sos.longitude)
+            Log.d(TAG, "Address conversion successful: $address")
+            address
+        } else {
+            Log.w(TAG, "Address conversion failed: Invalid coordinates (${sos.latitude}, ${sos.longitude})")
+            "Location unavailable"
+        }
+    }
+
+    private fun extractMessageContent(sosContent: String): String {
+        Log.d(TAG, "Parsing SOS content: ${sosContent.take(50)}...")
+        return try {
+            val parts = sosContent.split("|")
+            val message = if (parts.size >= 6) parts[5] else sosContent
+            Log.d(TAG, "Extracted SOS message: $message")
+            message
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse SOS content: ${e.message}")
+            sosContent
+        }
     }
 
     private fun centerOnCurrentLocation() {
