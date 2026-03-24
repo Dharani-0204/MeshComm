@@ -145,6 +145,14 @@ class MeshService : Service() {
                             msg.content.take(60)
                         )
                     }
+                    MessageType.INFO -> {
+                        Log.d(TAG, "Received INFO message from ${msg.senderName} (deviceId: ${msg.deviceId})")
+                        // INFO messages are typically status updates, show as regular notification
+                        NotificationHelper.showMessageNotification(
+                            this@MeshService, "📍 ${msg.senderName}",
+                            msg.content.take(60)
+                        )
+                    }
                 }
             }
         }

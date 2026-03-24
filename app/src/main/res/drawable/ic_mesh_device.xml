@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/mesh_active">
+
+    <!-- Phone/device shape -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M17,1.01L7,1c-1.1,0 -2,0.9 -2,2v18c0,1.1 0.9,2 2,2h10c1.1,0 2,-0.9 2,-2V3c0,-1.1 -0.9,-1.99 -2,-1.99zM17,19H7V5h10v14z"/>
+
+    <!-- Mesh network indicators (multiple small circles) -->
+    <path
+        android:fillColor="@color/mesh_active"
+        android:pathData="M12,6.5C12.55,6.5 13,6.95 13,7.5C13,8.05 12.55,8.5 12,8.5C11.45,8.5 11,8.05 11,7.5C11,6.95 11.45,6.5 12,6.5Z"/>
+    <path
+        android:fillColor="@color/mesh_active"
+        android:pathData="M9,9C9.55,9 10,9.45 10,10C10,10.55 9.55,11 9,11C8.45,11 8,10.55 8,10C8,9.45 8.45,9 9,9Z"/>
+    <path
+        android:fillColor="@color/mesh_active"
+        android:pathData="M15,9C15.55,9 16,9.45 16,10C16,10.55 15.55,11 15,11C14.45,11 14,10.55 14,10C14,9.45 14.45,9 15,9Z"/>
+
+    <!-- Connection lines -->
+    <path
+        android:strokeColor="@color/mesh_active"
+        android:strokeWidth="0.5"
+        android:pathData="M12,8L9,10M12,8L15,10M9,10L15,10"/>
+</vector>

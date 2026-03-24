@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your medical information helps rescuers provide better assistance during emergencies."
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Blood Group Dropdown -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilBloodGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Blood Group"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_marginBottom="16dp">
+
+        <AutoCompleteTextView
+            android:id="@+id/actvBloodGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Medical Conditions -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilMedicalConditions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Medical Conditions"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        app:helperText="e.g., Diabetes, Heart Disease (comma-separated)"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etMedicalConditions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="2"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Allergies -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilAllergies"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Allergies"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        app:helperText="e.g., Penicillin, Peanuts (comma-separated)">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etAllergies"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="2"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

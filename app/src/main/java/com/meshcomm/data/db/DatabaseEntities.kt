@@ -18,6 +18,7 @@ data class MessageEntity(
     val content: String,
     val latitude: Double,
     val longitude: Double,
+    val locationName: String = "",
     val batteryLevel: Int,
     val nearbyDevicesCount: Int,
     val timestamp: Long,
@@ -39,6 +40,35 @@ data class UserEntity(
 data class SeenMessageEntity(
     @PrimaryKey val messageId: String,
     val seenAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "user_profiles")
+data class UserProfileEntity(
+    @PrimaryKey val odiumId: String,
+    val name: String,
+    val role: String,
+    val bloodGroup: String = "",
+    val medicalConditions: String = "",  // JSON array stored as string
+    val allergies: String = "",          // JSON array stored as string
+    val emergencyContacts: String = "",  // JSON array stored as string
+    val isProfileComplete: Boolean = false,
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val syncedWithFirebase: Boolean = false
+)
+
+@Entity(tableName = "sos_alerts")
+data class SOSAlertEntity(
+    @PrimaryKey val alertId: String,
+    val userId: String,
+    val userName: String,
+    val latitude: Double,
+    val longitude: Double,
+    val message: String,
+    val timestamp: Long,
+    val batteryLevel: Int,
+    val isActive: Boolean = true,
+    val profileSnapshot: String = "",  // JSON of profile at alert time
+    val syncedWithFirebase: Boolean = false
 )
 
 // ─── DAOs ─────────────────────────────────────────────────────────────────────
@@ -89,4 +119,52 @@ interface SeenMessageDao {
 
     @Query("DELETE FROM seen_messages WHERE seenAt < :cutoff")
     suspend fun cleanUp(cutoff: Long)
+}
+
+@Dao
+interface UserProfileDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdate(profile: UserProfileEntity)
+
+    @Query("SELECT * FROM user_profiles WHERE odiumId = :userId")
+    suspend fun getProfile(userId: String): UserProfileEntity?
+
+    @Query("SELECT * FROM user_profiles WHERE odiumId = :userId")
+    fun getProfileFlow(userId: String): Flow<UserProfileEntity?>
+
+    @Query("UPDATE user_profiles SET isProfileComplete = :complete, lastUpdated = :timestamp WHERE odiumId = :userId")
+    suspend fun updateProfileCompletion(userId: String, complete: Boolean, timestamp: Long = System.currentTimeMillis())
+
+    @Query("UPDATE user_profiles SET syncedWithFirebase = :synced WHERE odiumId = :userId")
+    suspend fun updateSyncStatus(userId: String, synced: Boolean)
+
+    @Query("SELECT * FROM user_profiles WHERE syncedWithFirebase = 0")
+    suspend fun getUnsyncedProfiles(): List<UserProfileEntity>
+}
+
+@Dao
+interface SOSAlertDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(alert: SOSAlertEntity)
+
+    @Query("SELECT * FROM sos_alerts WHERE isActive = 1 ORDER BY timestamp DESC")
+    fun getActiveAlerts(): Flow<List<SOSAlertEntity>>
+
+    @Query("SELECT * FROM sos_alerts ORDER BY timestamp DESC")
+    fun getAllAlerts(): Flow<List<SOSAlertEntity>>
+
+    @Query("SELECT * FROM sos_alerts ORDER BY timestamp DESC LIMIT :limit")
+    fun getRecentAlerts(limit: Int): Flow<List<SOSAlertEntity>>
+
+    @Query("UPDATE sos_alerts SET isActive = :active WHERE alertId = :alertId")
+    suspend fun updateActiveStatus(alertId: String, active: Boolean)
+
+    @Query("UPDATE sos_alerts SET syncedWithFirebase = :synced WHERE alertId = :alertId")
+    suspend fun updateSyncStatus(alertId: String, synced: Boolean)
+
+    @Query("SELECT * FROM sos_alerts WHERE syncedWithFirebase = 0")
+    suspend fun getUnsyncedAlerts(): List<SOSAlertEntity>
+
+    @Query("SELECT * FROM sos_alerts WHERE timestamp > :since ORDER BY timestamp DESC")
+    fun getAlertsSince(since: Long): Flow<List<SOSAlertEntity>>
 }

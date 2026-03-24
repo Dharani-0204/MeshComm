@@ -22,6 +22,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.meshcomm.databinding.FragmentSosBinding
+import com.meshcomm.location.LocationProvider
 import com.meshcomm.ui.broadcast.MessageAdapter
 import com.meshcomm.ui.home.MeshViewModel
 import com.meshcomm.utils.EmergencyContactsManager
@@ -166,16 +167,77 @@ class SOSFragment : Fragment() {
             else -> "EMERGENCY - I need help!"
         }
 
-        val location = getCurrentLocation()
-        lastSentLocation = location
+        // Show getting location indicator
+        showLocationStatus("Getting location...")
 
-        // Send immediately without contact selection dialog
-        executeSOS(message, isCritical)
+        // Request fresh location with callback
+        requestFreshLocationForSOS(message, isCritical)
     }
 
     private fun sendQuickSOS(message: String) {
-        lastSentLocation = getCurrentLocation()
-        executeSOS(message, false)
+        showLocationStatus("Getting location...")
+        requestFreshLocationForSOS(message, false)
+    }
+
+    private fun requestFreshLocationForSOS(message: String, isCritical: Boolean) {
+        // First try to get cached location for immediate response
+        val cachedLocation = getCurrentLocation()
+        if (cachedLocation != null) {
+            Log.d(TAG, "Using cached location for immediate SOS")
+            lastSentLocation = cachedLocation
+            hideLocationStatus()
+            executeSOS(message, isCritical)
+            return
+        }
+
+        // No cached location available, request fresh one
+        Log.d(TAG, "No cached location, requesting fresh location for SOS")
+
+        // Create a simple LocationProvider instance and use callback
+        val locationProvider = com.meshcomm.location.LocationProvider(requireContext())
+
+        locationProvider.requestFreshLocation(object : com.meshcomm.location.LocationProvider.LocationCallback {
+            override fun onLocationReceived(location: Location) {
+                Log.d(TAG, "Fresh location received for SOS: ${location.latitude}, ${location.longitude}")
+                lastSentLocation = location
+
+                activity?.runOnUiThread {
+                    hideLocationStatus()
+                    executeSOS(message, isCritical)
+                }
+            }
+
+            override fun onLocationFailed(error: String) {
+                Log.w(TAG, "Fresh location failed for SOS: $error")
+
+                activity?.runOnUiThread {
+                    hideLocationStatus()
+
+                    // Show error but still allow SOS to be sent without location
+                    Toast.makeText(
+                        requireContext(),
+                        "Location unavailable: $error\nSending SOS without location...",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    lastSentLocation = null
+                    executeSOS(message, isCritical)
+                }
+            }
+        })
+    }
+
+    private fun showLocationStatus(message: String) {
+        // Show location status in the confirmation text area temporarily
+        binding.confirmationText.text = message
+        binding.confirmationText.visibility = View.VISIBLE
+    }
+
+    private fun hideLocationStatus() {
+        // Only hide if it's showing a location status message
+        if (binding.confirmationText.text.toString().contains("location", ignoreCase = true)) {
+            binding.confirmationText.visibility = View.GONE
+        }
     }
 
     private fun executeSOS(message: String, isCritical: Boolean) {
@@ -328,7 +390,7 @@ class SOSFragment : Fragment() {
     }
 
     private fun getCurrentLocation(): Location? {
-        Log.d(TAG, "Getting current location")
+        Log.d(TAG, "Getting current location (fallback method)")
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -340,14 +402,29 @@ class SOSFragment : Fragment() {
 
         val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return try {
-            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            if (location != null) {
-                Log.d(TAG, "Location obtained: (${location.latitude}, ${location.longitude})")
-            } else {
-                Log.w(TAG, "No location available from GPS or Network provider")
+            // Try to get the best available location
+            val gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            val networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+
+            // Prefer GPS if available and recent, otherwise use network
+            val bestLocation = when {
+                gpsLocation != null && networkLocation != null -> {
+                    // Use more recent location, prefer GPS if times are close
+                    if (gpsLocation.time > networkLocation.time - 30000) gpsLocation else networkLocation
+                }
+                gpsLocation != null -> gpsLocation
+                networkLocation != null -> networkLocation
+                else -> null
             }
-            location
+
+            if (bestLocation != null) {
+                Log.d(TAG, "Location obtained: (${bestLocation.latitude}, ${bestLocation.longitude}) from ${
+                    if (bestLocation == gpsLocation) "GPS" else "Network"
+                }")
+            } else {
+                Log.w(TAG, "No location available from any provider")
+            }
+            bestLocation
         } catch (e: Exception) {
             Log.e(TAG, "Error getting location: ${e.message}", e)
             null
