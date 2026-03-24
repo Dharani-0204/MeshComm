@@ -10,12 +10,12 @@ import com.meshcomm.data.model.MessageType
 import com.meshcomm.data.repository.MessageRepository
 import com.meshcomm.utils.BatteryHelper
 import com.meshcomm.utils.PrefsHelper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.launch
 import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
 
 class MessageRouter(
     private val context: Context,
@@ -24,104 +24,175 @@ class MessageRouter(
 ) {
     companion object {
         private const val TAG = "MessageRouter"
+        private const val MAX_RETRIES = 3
+        private const val SOS_MAX_RETRIES = 5 // Higher priority for SOS
+        private const val INITIAL_BACKOFF = 1000L
+        private const val CHUNK_ACK_TIMEOUT = 5000L
     }
 
     private val selfId = PrefsHelper.getUserId(context)
     private val seenMessages: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val gson = Gson()
+    private val chunkingManager = ChunkingManager(context)
+
+    private val chunkAcks = ConcurrentHashMap<String, Boolean>()
 
     private val _incomingMessages = MutableSharedFlow<Message>(replay = 0)
     val incomingMessages: SharedFlow<Message> = _incomingMessages
 
-    /** Called when raw JSON arrives from any transport */
     fun onRawDataReceived(json: String, fromPeerId: String) {
         scope.launch {
             try {
                 val message = gson.fromJson(json, Message::class.java) ?: return@launch
-                Log.d(TAG, "Received message from $fromPeerId: type=${message.type}, sender=${message.senderName}")
+                
+                if (message.type == MessageType.CHUNK_ACK) {
+                    val key = "${message.originalMessageId}_${message.chunkIndex}"
+                    chunkAcks[key] = true
+                    return@launch
+                }
+
                 processMessage(message, fromPeerId)
             } catch (e: Exception) {
-                Log.e(TAG, "Error processing message: ${e.message}", e)
+                Log.e(TAG, "Error processing raw data: ${e.message}")
             }
         }
     }
 
     private suspend fun processMessage(message: Message, fromPeerId: String) {
-        // 1. Deduplication
         if (seenMessages.contains(message.messageId)) {
-            Log.d(TAG, "Duplicate message ignored: ${message.messageId}")
             return
         }
         seenMessages.add(message.messageId)
-        repository.markSeen(message.messageId)
+        
+        if (message.type != MessageType.CHUNK) {
+            repository.markSeen(message.messageId)
+        }
 
-        // 2. Decrypt if needed
+        if (message.type == MessageType.CHUNK) {
+            val reassembled = chunkingManager.processChunk(message) { ack ->
+                transportLayer.sendToAll(gson.toJson(ack))
+            }
+            
+            if (reassembled != null) {
+                processMessage(reassembled, fromPeerId)
+            }
+            
+            forwardIfNeeded(message, fromPeerId)
+            return
+        }
+
         val decrypted = EncryptionUtil.decryptMessage(message)
 
-        // 3. Determine if this device is the intended recipient
         val isForMe = decrypted.targetId == null || decrypted.targetId == selfId
         val isSOS   = decrypted.type == MessageType.SOS
+        val isMedia = decrypted.type == MessageType.AUDIO || decrypted.type == MessageType.IMAGE
         val isSelf  = decrypted.senderId == selfId
 
-        // 4. Store and emit if relevant to this user (but NOT if sender is self)
-        if ((isForMe || isSOS) && !isSelf) {
+        if ((isForMe || isSOS || isMedia) && !isSelf) {
             val stored = decrypted.copy(status = MessageStatus.DELIVERED)
             repository.saveMessage(stored)
             _incomingMessages.emit(stored)
-            Log.i(TAG, "Message delivered to user: type=${decrypted.type}, from=${decrypted.senderName}")
-        } else if (isSelf) {
-            Log.d(TAG, "Ignoring own message echo: ${message.messageId}")
-        } else {
-            // Store relayed messages too (for audit)
+            Log.i(TAG, "Message delivered: type=${decrypted.type}, from=${decrypted.senderName}")
+        } else if (!isSelf) {
             repository.saveMessage(decrypted.copy(status = MessageStatus.RELAYED))
-            Log.d(TAG, "Message stored as relayed: ${message.messageId}")
         }
 
-        // 5. Forward decision
+        forwardIfNeeded(decrypted, fromPeerId)
+    }
+
+    private fun forwardIfNeeded(message: Message, fromPeerId: String) {
         val battery = BatteryHelper.getLevel(context)
-        val shouldRelay = battery > 30
-                       && decrypted.ttl > 0
-                       && decrypted.senderId != selfId
+        val isSOS = message.type == MessageType.SOS
+        
+        // SOS messages bypass battery constraints for maximum reach
+        // Other messages are only relayed if battery > 15% (Battery Optimized)
+        val shouldRelay = (isSOS || battery > 15) && message.ttl > 0 && message.senderId != selfId
 
         if (shouldRelay) {
-            val connectedDevices = transportLayer.getConnectedIds().size
-            val forwarded = decrypted.copy(
-                ttl = decrypted.ttl - 1,
+            val forwarded = message.copy(
+                ttl = message.ttl - 1,
                 status = MessageStatus.RELAYED
             )
-            // Do NOT re-encrypt — encryption was done by original sender
             val json = gson.toJson(forwarded)
             transportLayer.sendToAllExcept(json, excludeId = fromPeerId)
-            Log.i(TAG, "Message forwarded to $connectedDevices devices (excluding $fromPeerId): ${message.messageId}")
-        } else {
-            Log.d(TAG, "Message NOT forwarded: battery=$battery%, ttl=${decrypted.ttl}, isSelf=$isSelf")
+            Log.d(TAG, "Relayed ${message.type} from ${message.senderName}, battery=$battery%")
         }
     }
 
-    /** Send a new message originating from this device */
     fun sendMessage(message: Message) {
         scope.launch {
+            if (message.type == MessageType.AUDIO || message.type == MessageType.IMAGE) {
+                repository.saveMessage(message.copy(status = MessageStatus.SENT))
+                _incomingMessages.emit(message)
+
+                val chunks = chunkingManager.chunkify(message)
+                chunks.forEach { chunk ->
+                    sendChunkReliably(chunk)
+                }
+                return@launch
+            }
+
             val prepared = EncryptionUtil.encryptMessage(message)
-            seenMessages.add(prepared.messageId)  // Don't process own echoes
+            seenMessages.add(prepared.messageId)
             repository.saveMessage(prepared.copy(status = MessageStatus.SENT))
-            val json = gson.toJson(prepared)
+            
+            sendWithRetry(prepared)
 
-            val connectedDevices = transportLayer.getConnectedIds().size
-            transportLayer.sendToAll(json)
-
-            Log.i(TAG, "Message sent to $connectedDevices devices: type=${prepared.type}, id=${prepared.messageId}")
-
-            // For SOS messages, DO NOT emit to sender's own UI (no self-notification)
-            // For other messages, show in own UI immediately
             if (prepared.type != MessageType.SOS) {
                 _incomingMessages.emit(prepared)
-                Log.d(TAG, "Message emitted to own UI: ${prepared.messageId}")
-            } else {
-                Log.d(TAG, "SOS NOT emitted to sender UI (prevents self-notification): ${prepared.messageId}")
             }
         }
     }
 
-    fun getSeenCount(): Int = seenMessages.size
+    private suspend fun sendChunkReliably(chunk: Message) {
+        val key = "${chunk.originalMessageId}_${chunk.chunkIndex}"
+        val json = gson.toJson(chunk)
+        var attempt = 0
+        var acknowledged = false
+
+        while (attempt < MAX_RETRIES && !acknowledged) {
+            chunkAcks[key] = false
+            transportLayer.sendToAll(json)
+            
+            val startTime = System.currentTimeMillis()
+            while (System.currentTimeMillis() - startTime < CHUNK_ACK_TIMEOUT) {
+                if (chunkAcks[key] == true) {
+                    acknowledged = true
+                    break
+                }
+                delay(100)
+            }
+
+            if (!acknowledged) {
+                attempt++
+                delay(INITIAL_BACKOFF * attempt)
+            }
+        }
+
+        chunkAcks.remove(key)
+    }
+
+    private suspend fun sendWithRetry(message: Message) {
+        val json = gson.toJson(message)
+        var attempt = 0
+        var success = false
+        var backoff = INITIAL_BACKOFF
+        
+        val maxRetries = if (message.type == MessageType.SOS) SOS_MAX_RETRIES else MAX_RETRIES
+
+        while (attempt < maxRetries && !success) {
+            val connectedIds = transportLayer.getConnectedIds()
+            if (connectedIds.isNotEmpty()) {
+                transportLayer.sendToAll(json)
+                success = true
+            } else {
+                attempt++
+                if (attempt < maxRetries) {
+                    delay(backoff)
+                    backoff *= 2
+                }
+            }
+        }
+    }
 }

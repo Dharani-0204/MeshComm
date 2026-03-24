@@ -13,13 +13,15 @@ import androidx.lifecycle.viewModelScope
 import com.meshcomm.data.db.AppDatabase
 import com.meshcomm.data.model.Message
 import com.meshcomm.data.model.MeshStats
+import com.meshcomm.data.model.MessageType
 import com.meshcomm.data.model.PeerDevice
 import com.meshcomm.data.repository.MessageRepository
 import com.meshcomm.mesh.MeshService
 import com.meshcomm.mesh.PeerRegistry
+import com.meshcomm.utils.BatteryHelper
+import com.meshcomm.utils.PrefsHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MeshViewModel(application: Application) : AndroidViewModel(application) {
@@ -91,5 +93,38 @@ class MeshViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sendSOS(message: String = "EMERGENCY! I need help!") {
         meshService?.sendSOS(message)
+    }
+
+    fun sendAudio(filePath: String, duration: Long, targetId: String? = null) {
+        val deviceId = PrefsHelper.getUserId(getApplication())
+        val msg = Message(
+            senderId = deviceId,
+            senderName = PrefsHelper.getUserName(getApplication()),
+            targetId = targetId,
+            type = MessageType.AUDIO,
+            content = "Audio message",
+            mediaUri = filePath,
+            mediaDuration = duration,
+            batteryLevel = BatteryHelper.getLevel(getApplication()),
+            deviceId = deviceId,
+            mediaType = "audio/m4a"
+        )
+        meshService?.messageRouter?.sendMessage(msg)
+    }
+
+    fun sendImage(filePath: String, targetId: String? = null) {
+        val deviceId = PrefsHelper.getUserId(getApplication())
+        val msg = Message(
+            senderId = deviceId,
+            senderName = PrefsHelper.getUserName(getApplication()),
+            targetId = targetId,
+            type = MessageType.IMAGE,
+            content = "Image message",
+            mediaUri = filePath,
+            batteryLevel = BatteryHelper.getLevel(getApplication()),
+            deviceId = deviceId,
+            mediaType = "image/jpeg"
+        )
+        meshService?.messageRouter?.sendMessage(msg)
     }
 }

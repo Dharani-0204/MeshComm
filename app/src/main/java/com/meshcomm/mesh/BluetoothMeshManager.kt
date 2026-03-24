@@ -1,268 +1,298 @@
 package com.meshcomm.mesh
 
+import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.bluetooth.*
 import android.bluetooth.le.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.location.LocationManager
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.ParcelUuid
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.meshcomm.data.model.PeerDevice
 import com.meshcomm.data.model.TransportType
 import com.meshcomm.utils.PrefsHelper
 import kotlinx.coroutines.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.PrintWriter
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.random.Random
 
-@SuppressLint("MissingPermission")
+/**
+ * BluetoothMeshManager: Advanced zero-intervention Bluetooth Mesh.
+ * Optimized for discovery, automatic reconnection, and collision avoidance.
+ */
 class BluetoothMeshManager(
     private val context: Context,
     private val transportLayer: TransportLayer
 ) {
     companion object {
         private const val TAG = "BluetoothMeshManager"
-        val SERVICE_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-        val APP_UUID: UUID     = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
-        const val DISCOVERABLE_DURATION = 300 // 5 minutes
+        // Standardized Service UUID for LifeLink Mesh (Classic & BLE)
+        val MESH_UUID: UUID = UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66")
     }
 
     private val adapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var serverSocket: BluetoothServerSocket? = null
+    
     private var leAdvertiser: BluetoothLeAdvertiser? = null
     private var leScanner: BluetoothLeScanner? = null
+    
     private val knownDevices = ConcurrentHashMap<String, BluetoothDevice>()
+    private val activeSockets = ConcurrentHashMap<String, BluetoothSocket>()
+    private val connectingDevices = ConcurrentHashMap.newKeySet<String>()
 
-    // ── Classic Bluetooth Discovery Receiver ─────────────────────────────────
-
-    private val discoveryReceiver = object : BroadcastReceiver() {
+    private val bluetoothReceiver = object : BroadcastReceiver() {
+        @SuppressLint("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                BluetoothDevice.ACTION_FOUND -> {
-                    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                    device?.let {
-                        val deviceName = it.name ?: "Unknown"
-                        val deviceAddress = it.address
-                        val rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE).toInt()
-
-                        Log.d(TAG, "Classic BT device discovered: $deviceName ($deviceAddress) RSSI: $rssi")
-
-                        knownDevices[deviceAddress] = it
-                        if (!transportLayer.getConnectedIds().contains(deviceAddress)) {
-                            Log.d(TAG, "Auto-connecting to $deviceName...")
-                            connectToDevice(it)
-                        }
+                BluetoothAdapter.ACTION_STATE_CHANGED -> {
+                    val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
+                    if (state == BluetoothAdapter.STATE_ON) {
+                        Log.i(TAG, "Bluetooth turned ON - Restarting Mesh Components")
+                        restartMesh()
                     }
                 }
-                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
-                    Log.d(TAG, "Classic discovery started")
+                BluetoothDevice.ACTION_FOUND -> {
+                    val device = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    } ?: return
+                    
+                    // Fallback identification via name if BLE fails
+                    if (device.name?.contains("LifeLink", ignoreCase = true) == true) {
+                        Log.d(TAG, "Classic discovery found app peer: ${device.address}")
+                        knownDevices[device.address] = device
+                        autoConnect(device)
+                    }
                 }
-                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-                    Log.d(TAG, "Classic discovery finished (found ${knownDevices.size} total devices)")
-                }
+            }
+        }
+    }
+
+    private val bleScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            val device = result.device
+            if (!transportLayer.getConnectedIds().contains(device.address)) {
+                Log.d(TAG, "BLE Mesh Scan found peer: ${device.address}")
+                knownDevices[device.address] = device
+                autoConnect(device)
             }
         }
     }
 
     init {
-        // Register discovery receiver
         val filter = IntentFilter().apply {
+            addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(BluetoothDevice.ACTION_FOUND)
-            addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
-            addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         }
-        context.registerReceiver(discoveryReceiver, filter)
-        Log.d(TAG, "BluetoothMeshManager initialized, discovery receiver registered")
+        context.registerReceiver(bluetoothReceiver, filter)
     }
 
-    // ── Device State Checks ──────────────────────────────────────────────────
-
-    fun isBluetoothEnabled(): Boolean {
-        val enabled = adapter?.isEnabled == true
-        Log.d(TAG, "Bluetooth enabled: $enabled")
-        return enabled
+    private fun restartMesh() {
+        stopAll()
+        startServer()
+        startAdvertising()
+        startDiscovery()
+        startReconnectionLoop()
     }
 
-    fun isLocationEnabled(): Boolean {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        val networkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-        val enabled = gpsEnabled || networkEnabled
-        Log.d(TAG, "Location enabled: $enabled (GPS: $gpsEnabled, Network: $networkEnabled)")
-        return enabled
-    }
-
-    // ── Make Device Discoverable ─────────────────────────────────────────────
-
-    fun makeDiscoverable(activity: Activity) {
-        val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION)
-        }
-        activity.startActivityForResult(discoverableIntent, 1)
-        Log.d(TAG, "Requesting device discoverability for $DISCOVERABLE_DURATION seconds")
-    }
-
-    // ── Classic RFCOMM Server ────────────────────────────────────────────────
-
+    @SuppressLint("MissingPermission")
     fun startServer() {
+        if (adapter?.isEnabled != true) return
+        
         scope.launch {
             try {
-                serverSocket = adapter?.listenUsingRfcommWithServiceRecord("MeshComm", SERVICE_UUID)
-                Log.d(TAG, "BT server started on RFCOMM")
+                serverSocket?.close()
+                // listenUsingInsecureRfcomm avoids the "Bluetooth Pairing Request" popup
+                serverSocket = adapter.listenUsingInsecureRfcommWithServiceRecord("LifeLinkMesh", MESH_UUID)
+                Log.i(TAG, "Insecure RFCOMM Server listening for Mesh peers...")
+                
                 while (isActive) {
-                    val socket = serverSocket?.accept() ?: break
-                    Log.d(TAG, "Incoming connection from ${socket.remoteDevice.address}")
+                    val socket = try { serverSocket?.accept() } catch (e: Exception) { null } ?: break
+                    Log.i(TAG, "Accepted incoming Mesh connection from ${socket.remoteDevice.address}")
                     launch { handleSocket(socket) }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "BT server error: ${e.message}", e)
+                Log.e(TAG, "RFCOMM Server error: ${e.message}")
+                delay(10000)
+                if (isActive) startServer()
             }
         }
     }
 
-    private fun handleSocket(socket: BluetoothSocket) {
-        val deviceId = socket.remoteDevice.address
-        val deviceName = socket.remoteDevice.name ?: deviceId
-
-        Log.d(TAG, "Peer connected: $deviceId ($deviceName)")
-        PeerRegistry.addPeer(PeerDevice(deviceId, deviceName, TransportType.BLUETOOTH))
-        transportLayer.registerChannel(deviceId, socket.outputStream)
-        knownDevices[deviceId] = socket.remoteDevice
-
+    @SuppressLint("MissingPermission")
+    private suspend fun handleSocket(socket: BluetoothSocket) {
+        val address = socket.remoteDevice.address
+        
         try {
+            val writer = PrintWriter(socket.outputStream, true)
             val reader = BufferedReader(InputStreamReader(socket.inputStream))
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                line?.let { PeerRegistry.dispatchIncoming(it, deviceId) }
+            
+            // Handshake to exchange peer identity and avoid dual-channel collisions
+            val myId = PrefsHelper.getUserId(context)
+            writer.println("HANDSHAKE:$myId")
+            
+            val handshakeLine = withTimeoutOrNull(5000) { 
+                withContext(Dispatchers.IO) { reader.readLine() } 
+            }
+            
+            if (handshakeLine == null || !handshakeLine.startsWith("HANDSHAKE:")) {
+                Log.w(TAG, "Handshake failed/timeout for $address")
+                runCatching { socket.close() }
+                return
+            }
+            
+            val remoteId = handshakeLine.substringAfter("HANDSHAKE:")
+            Log.d(TAG, "Mesh Handshake success with $address (RemoteID: $remoteId)")
+
+            // Anti-collision logic: Ensure only one stable channel per peer pair
+            val existing = activeSockets[address]
+            if (existing != null && existing.isConnected) {
+                if (myId < remoteId) {
+                    Log.d(TAG, "Collision: dropping redundant incoming channel from $address")
+                    runCatching { socket.close() }
+                    return
+                } else {
+                    Log.d(TAG, "Collision: replacing existing outgoing channel to $address")
+                    runCatching { existing.close() }
+                }
+            }
+
+            activeSockets[address] = socket
+            val deviceName = try { socket.remoteDevice.name } catch (e: Exception) { null } ?: "Peer ${remoteId.take(4)}"
+            
+            PeerRegistry.addPeer(PeerDevice(address, deviceName, TransportType.BLUETOOTH))
+            transportLayer.registerChannel(address, socket.outputStream)
+
+            withContext(Dispatchers.IO) {
+                while (isActive) {
+                    val line = reader.readLine() ?: break
+                    PeerRegistry.dispatchIncoming(line, address)
+                }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Socket error for $deviceId: ${e.message}")
+            Log.w(TAG, "Bluetooth Mesh session with $address ended: ${e.message}")
         } finally {
-            Log.d(TAG, "Peer disconnected: $deviceId")
-            transportLayer.unregisterChannel(deviceId)
-            PeerRegistry.removePeer(deviceId)
+            if (activeSockets[address] == socket) {
+                activeSockets.remove(address)
+                transportLayer.unregisterChannel(address, socket.outputStream)
+                PeerRegistry.removePeer(address)
+            }
             runCatching { socket.close() }
         }
     }
 
-    // ── Classic RFCOMM Client ────────────────────────────────────────────────
-
-    fun connectToDevice(device: BluetoothDevice) {
+    @SuppressLint("MissingPermission")
+    private fun autoConnect(device: BluetoothDevice) {
+        val address = device.address
+        if (activeSockets.containsKey(address) || connectingDevices.contains(address)) return
+        
+        connectingDevices.add(address)
         scope.launch {
-            val deviceId = device.address
-            val deviceName = device.name ?: deviceId
-            Log.d(TAG, "Connecting to $deviceName ($deviceId)...")
             try {
-                val socket = device.createRfcommSocketToServiceRecord(SERVICE_UUID)
+                // Jitter to reduce connection failures when multiple devices try at once
+                delay(Random.nextLong(1000, 5000))
+                if (activeSockets.containsKey(address)) return@launch
+
+                Log.d(TAG, "Initiating Mesh auto-connect to $address")
+                if (adapter?.isDiscovering == true) adapter.cancelDiscovery()
+                
+                // createInsecureRfcommSocketToServiceRecord avoids user intervention (no pairing popup)
+                val socket = device.createInsecureRfcommSocketToServiceRecord(MESH_UUID)
                 socket.connect()
-                Log.d(TAG, "Connected to $deviceName")
                 handleSocket(socket)
             } catch (e: Exception) {
-                Log.e(TAG, "Connection failed to $deviceId: ${e.message}")
+                Log.w(TAG, "Auto-connect to $address failed: ${e.message}")
+            } finally {
+                connectingDevices.remove(address)
             }
         }
     }
 
-    // ── BLE Advertising (be discoverable) ───────────────────────────────────
-
+    @SuppressLint("MissingPermission")
     fun startAdvertising() {
-        leAdvertiser = adapter?.bluetoothLeAdvertiser
-        val settings = AdvertiseSettings.Builder()
-            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-            .setConnectable(true)
-            .setTimeout(0)
-            .build()
-        val data = AdvertiseData.Builder()
-            .addServiceUuid(ParcelUuid(APP_UUID))
-            .setIncludeDeviceName(true)
-            .build()
-        leAdvertiser?.startAdvertising(settings, data, advertiseCallback)
-        Log.d(TAG, "BLE advertising started")
+        if (adapter?.isEnabled != true) return
+        try {
+            leAdvertiser = adapter.bluetoothLeAdvertiser ?: return
+            val settings = AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setConnectable(true)
+                .build()
+            
+            val data = AdvertiseData.Builder()
+                .addServiceUuid(ParcelUuid(MESH_UUID))
+                // Note: Device name excluded to ensure packet size stays within 31 bytes
+                .setIncludeDeviceName(false)
+                .build()
+            
+            leAdvertiser?.startAdvertising(settings, data, object : AdvertiseCallback() {
+                override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+                    Log.i(TAG, "BLE identification advertising successfully active")
+                }
+                override fun onStartFailure(errorCode: Int) {
+                    Log.e(TAG, "BLE advertising failed: $errorCode")
+                }
+            })
+        } catch (e: Exception) { Log.e(TAG, "BLE Advertise error: ${e.message}") }
     }
 
-    private val advertiseCallback = object : AdvertiseCallback() {
-        override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-            Log.d(TAG, "BLE advertising started successfully")
-        }
-        override fun onStartFailure(errorCode: Int) {
-            Log.e(TAG, "BLE advertising failed: errorCode=$errorCode")
-        }
-    }
-
-    // ── BLE Scanning ─────────────────────────────────────────────────────────
-
+    @SuppressLint("MissingPermission")
     fun startDiscovery() {
-        // Check prerequisites
-        if (!isBluetoothEnabled()) {
-            Log.e(TAG, "Cannot start discovery: Bluetooth is OFF")
-            return
-        }
-        if (!isLocationEnabled()) {
-            Log.e(TAG, "Cannot start discovery: Location/GPS is OFF (required for BLE scan)")
-            return
-        }
-
-        // Start BLE scan
-        leScanner = adapter?.bluetoothLeScanner
-        val filter = ScanFilter.Builder()
-            .setServiceUuid(ParcelUuid(APP_UUID))
-            .build()
-        val settings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-            .build()
-        leScanner?.startScan(listOf(filter), settings, scanCallback)
-        Log.d(TAG, "BT discovery started (BLE scan)")
-
-        // Also do classic discovery for older devices
-        adapter?.startDiscovery()
-        Log.d(TAG, "BT discovery started (Classic scan)")
-    }
-
-    private val scanCallback = object : ScanCallback() {
-        override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val device = result.device
-            val deviceId = device.address
-            val deviceName = device.name ?: deviceId
-            val rssi = result.rssi
-            Log.d(TAG, "BLE device discovered: $deviceName ($deviceId) RSSI: $rssi")
-
-            knownDevices[deviceId] = device
-            if (!transportLayer.getConnectedIds().contains(deviceId)) {
-                connectToDevice(device)
+        if (adapter?.isEnabled != true) return
+        try {
+            leScanner = adapter.bluetoothLeScanner ?: return
+            val filter = ScanFilter.Builder().setServiceUuid(ParcelUuid(MESH_UUID)).build()
+            val settings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build()
+            
+            leScanner?.startScan(listOf(filter), settings, bleScanCallback)
+            Log.d(TAG, "Mesh BLE Scanner active")
+            
+            // Also trigger classic discovery periodically as a robust fallback
+            if (adapter.isDiscovering == false) {
+                adapter.startDiscovery()
             }
-        }
+        } catch (e: Exception) { Log.e(TAG, "BLE scan error: ${e.message}") }
     }
-
-    // ── Automatic Reconnection ───────────────────────────────────────────────
 
     fun startReconnectionLoop() {
         scope.launch {
             while (isActive) {
-                delay(60_000) // Every 60 seconds
-                Log.d(TAG, "Checking for disconnected devices to reconnect...")
-                knownDevices.forEach { (id, device) ->
-                    if (!transportLayer.getConnectedIds().contains(id)) {
-                        Log.d(TAG, "Reconnecting to $id...")
-                        connectToDevice(device)
+                delay(45_000) // Check every 45s
+                if (adapter?.isEnabled != true) continue
+                val connected = transportLayer.getConnectedIds()
+                knownDevices.forEach { (address, device) ->
+                    if (!connected.contains(address)) {
+                        autoConnect(device)
+                        delay(2000)
                     }
                 }
             }
         }
     }
 
+    @SuppressLint("MissingPermission")
     fun stopAll() {
-        Log.d(TAG, "Stopping BluetoothMeshManager")
         scope.cancel()
-        leScanner?.stopScan(scanCallback)
-        leAdvertiser?.stopAdvertising(advertiseCallback)
-        adapter?.cancelDiscovery()
-        runCatching { serverSocket?.close() }
-        runCatching { context.unregisterReceiver(discoveryReceiver) }
+        runCatching {
+            leScanner?.stopScan(bleScanCallback)
+            leAdvertiser?.stopAdvertising(object : AdvertiseCallback() {})
+            serverSocket?.close()
+            activeSockets.values.forEach { it.close() }
+            activeSockets.clear()
+            connectingDevices.clear()
+            context.unregisterReceiver(bluetoothReceiver)
+        }
     }
 }

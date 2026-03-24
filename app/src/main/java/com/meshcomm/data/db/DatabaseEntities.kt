@@ -24,7 +24,18 @@ data class MessageEntity(
     val ttl: Int,
     val status: String,
     val isEncrypted: Boolean,
-    val deviceId: String = ""
+    val deviceId: String = "",
+    
+    // Media extensions
+    val mediaUri: String? = null,
+    val mediaDuration: Long = 0,
+    val fileName: String? = null,
+    val mediaType: String? = null,
+    
+    // Chunking extensions
+    val chunkIndex: Int = 0,
+    val totalChunks: Int = 1,
+    val originalMessageId: String? = null
 )
 
 @Entity(tableName = "users")

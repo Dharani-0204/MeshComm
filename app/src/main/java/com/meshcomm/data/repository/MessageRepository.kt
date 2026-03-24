@@ -6,7 +6,6 @@ import com.meshcomm.data.db.SeenMessageEntity
 import com.meshcomm.data.model.Message
 import com.meshcomm.data.model.MessageStatus
 import com.meshcomm.data.model.MessageType
-import com.meshcomm.data.model.UserRole
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -53,7 +52,15 @@ class MessageRepository(private val db: AppDatabase) {
         timestamp = timestamp,
         ttl = ttl,
         status = status.name,
-        isEncrypted = isEncrypted
+        isEncrypted = isEncrypted,
+        deviceId = deviceId,
+        mediaUri = mediaUri,
+        mediaDuration = mediaDuration,
+        fileName = fileName,
+        mediaType = mediaType,
+        chunkIndex = chunkIndex,
+        totalChunks = totalChunks,
+        originalMessageId = originalMessageId
     )
 
     private fun MessageEntity.toDomain() = Message(
@@ -70,6 +77,14 @@ class MessageRepository(private val db: AppDatabase) {
         timestamp = timestamp,
         ttl = ttl,
         status = MessageStatus.valueOf(status),
-        isEncrypted = isEncrypted
+        isEncrypted = isEncrypted,
+        deviceId = deviceId,
+        mediaUri = mediaUri,
+        mediaDuration = mediaDuration,
+        fileName = fileName,
+        mediaType = mediaType,
+        chunkIndex = chunkIndex,
+        totalChunks = totalChunks,
+        originalMessageId = originalMessageId
     )
 }

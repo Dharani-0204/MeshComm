@@ -1,20 +1,29 @@
 package com.meshcomm.mesh
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import com.meshcomm.data.model.Message
 import com.meshcomm.data.model.MessageType
 import com.meshcomm.utils.BatteryHelper
 import com.meshcomm.utils.PrefsHelper
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 
 /**
  * Handles sending and receiving ACK / "I'm coming" replies to SOS messages.
+ * Also handles CHUNK level ACKs for reliable media transfer.
  */
 class AcknowledgementManager(
     private val context: Context,
-    private val router: MessageRouter
+    private val routerProvider: () -> MessageRouter?
 ) {
-    private val gson = Gson()
+    companion object {
+        private const val TAG = "AcknowledgementManager"
+    }
+
+    private val _chunkAcks = MutableSharedFlow<Message>()
+    val chunkAcks: SharedFlow<Message> = _chunkAcks
 
     enum class AckType { ACK, IM_COMING, HELP_ON_WAY }
 
@@ -31,9 +40,15 @@ class AcknowledgementManager(
             type = MessageType.DIRECT,
             content = content,
             batteryLevel = BatteryHelper.getLevel(context),
-            ttl = 7
+            ttl = 7,
+            deviceId = PrefsHelper.getUserId(context)
         )
-        router.sendMessage(ackMsg)
+        routerProvider()?.sendMessage(ackMsg)
+    }
+
+    suspend fun onChunkAckReceived(msg: Message) {
+        Log.d(TAG, "Chunk ACK received for msg: ${msg.originalMessageId}, index: ${msg.chunkIndex}")
+        _chunkAcks.emit(msg)
     }
 
     fun isAckMessage(message: Message): Boolean =

@@ -51,4 +51,13 @@ object PrefsHelper {
     fun setEmergencyContacts(ctx: Context, contacts: List<String>) {
         prefs(ctx).edit().putString(KEY_EMERGENCY_CONTACTS, contacts.joinToString(",")).apply()
     }
+
+    fun clearSession(ctx: Context) {
+        prefs(ctx).edit()
+            .remove(KEY_USER_NAME)
+            .remove(KEY_USER_ROLE)
+            .remove(KEY_SETUP_DONE)
+            .remove(KEY_EMERGENCY_CONTACTS)
+            .apply()
+    }
 }

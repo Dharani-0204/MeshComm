@@ -2,26 +2,37 @@ package com.meshcomm.data.model
 
 import java.util.UUID
 
-enum class MessageType { BROADCAST, DIRECT, SOS }
-enum class MessageStatus { SENT, RELAYED, DELIVERED }
+enum class MessageType { BROADCAST, DIRECT, SOS, AUDIO, IMAGE, CHUNK, CHUNK_ACK }
+enum class MessageStatus { SENT, RELAYED, DELIVERED, PENDING, FAILED }
 enum class UserRole { CIVILIAN, RESCUER, AUTHORITY }
 
 data class Message(
     val messageId: String = UUID.randomUUID().toString(),
     val senderId: String,
     val senderName: String,
-    val targetId: String? = null, // null for broadcast, specific ID for direct messages
+    val targetId: String? = null, // null for broadcast
     val type: MessageType = MessageType.BROADCAST,
-    val content: String,
+    val content: String, // Text message or Chunk Base64 payload
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val batteryLevel: Int = 100,
     val nearbyDevicesCount: Int = 0,
     val timestamp: Long = System.currentTimeMillis(),
     val ttl: Int = 7,
-    val status: MessageStatus = MessageStatus.SENT,
+    var status: MessageStatus = MessageStatus.SENT,
     val isEncrypted: Boolean = false,
-    val deviceId: String = "" // Device identifier for self-filtering
+    val deviceId: String = "", 
+    
+    // Media extensions
+    val mediaUri: String? = null, // Local path
+    val mediaDuration: Long = 0, // For audio
+    val fileName: String? = null,
+    val mediaType: String? = null, // "image/jpeg", "audio/m4a"
+    
+    // Chunking extensions
+    val chunkIndex: Int = 0,
+    val totalChunks: Int = 1,
+    val originalMessageId: String? = null // To reassemble chunks
 )
 
 data class User(

@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [MessageEntity::class, UserEntity::class, SeenMessageEntity::class],
-    version = 1,
+    version = 2, // Bumped from 1 to 2 to include media fields
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -1,10 +1,14 @@
 package com.meshcomm.ui.broadcast
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.DiffUtil
@@ -13,7 +17,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.meshcomm.R
 import com.meshcomm.data.model.Message
 import com.meshcomm.data.model.MessageType
+import com.meshcomm.utils.MediaHelper
 import com.meshcomm.utils.PrefsHelper
+import java.io.File
 import java.util.Date
 
 class MessageAdapter(private val context: Context) :
@@ -44,21 +50,32 @@ class MessageAdapter(private val context: Context) :
         private val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
         private val tvLocation: TextView = itemView.findViewById(R.id.tvLocation)
         private val tvSosLabel: TextView = itemView.findViewById(R.id.tvSosLabel)
+        
+        // Media views
+        private val layoutAudio: LinearLayout = itemView.findViewById(R.id.layoutAudio)
+        private val btnPlayAudio: ImageButton = itemView.findViewById(R.id.btnPlayAudio)
+        private val tvAudioDuration: TextView = itemView.findViewById(R.id.tvAudioDuration)
+        private val ivImage: ImageView = itemView.findViewById(R.id.ivImage)
 
         fun bind(msg: Message) {
             val isSelf = msg.senderId == selfId
             val isSOS  = msg.type == MessageType.SOS
 
             tvSender.text = if (isSelf) "You" else "${msg.senderName} [${msg.senderId.take(6)}]"
-            tvContent.text = try {
-                com.meshcomm.crypto.EncryptionUtil.decrypt(msg.content)
-
-
-            } catch (e: Exception) {
-                msg.content
+            
+            // Text content
+            if (msg.type == MessageType.AUDIO || msg.type == MessageType.IMAGE) {
+                tvContent.visibility = View.GONE
+            } else {
+                tvContent.visibility = View.VISIBLE
+                tvContent.text = try {
+                    com.meshcomm.crypto.EncryptionUtil.decrypt(msg.content)
+                } catch (e: Exception) {
+                    msg.content
+                }
             }
+
             tvTime.text = DateFormat.format("HH:mm", Date(msg.timestamp))
-            tvStatus.text = msg.status.name.lowercase().replaceFirstChar { it.uppercase() }
 
             // SOS styling
             tvSosLabel.visibility = if (isSOS) View.VISIBLE else View.GONE
@@ -72,6 +89,32 @@ class MessageAdapter(private val context: Context) :
                 )
             )
 
+            // Audio handling
+            if (msg.type == MessageType.AUDIO && msg.mediaUri != null) {
+                layoutAudio.visibility = View.VISIBLE
+                tvAudioDuration.text = formatDuration(msg.mediaDuration)
+                btnPlayAudio.setOnClickListener {
+                    MediaHelper.playAudio(msg.mediaUri) {
+                        btnPlayAudio.setImageResource(android.R.drawable.ic_media_play)
+                    }
+                    btnPlayAudio.setImageResource(android.R.drawable.ic_media_pause)
+                }
+            } else {
+                layoutAudio.visibility = View.GONE
+            }
+
+            // Image handling
+            if (msg.type == MessageType.IMAGE && msg.mediaUri != null) {
+                ivImage.visibility = View.VISIBLE
+                val file = File(msg.mediaUri)
+                if (file.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    ivImage.setImageBitmap(bitmap)
+                }
+            } else {
+                ivImage.visibility = View.GONE
+            }
+
             // Location
             if (msg.latitude != 0.0 && msg.longitude != 0.0) {
                 tvLocation.visibility = View.VISIBLE
@@ -82,6 +125,12 @@ class MessageAdapter(private val context: Context) :
 
             // Battery info
             tvStatus.text = "🔋${msg.batteryLevel}%  ${msg.status.name.lowercase()}"
+        }
+        
+        private fun formatDuration(durationMs: Long): String {
+            val seconds = (durationMs / 1000) % 60
+            val minutes = (durationMs / (1000 * 60)) % 60
+            return String.format("%02d:%02d", minutes, seconds)
         }
     }
 }

@@ -76,6 +76,43 @@ class ProfileFragment : Fragment() {
             }
             dialog.show(parentFragmentManager, "contact_picker")
         }
+
+        // Logout logic
+        binding.btnLogout.setOnClickListener {
+            showLogoutConfirmation()
+        }
+    }
+
+    private fun showLogoutConfirmation() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Logout")
+            .setMessage("Are you sure you want to logout? This will stop the mesh service and clear your session, but your messages will be kept.")
+            .setPositiveButton("Logout") { _, _ ->
+                performLogout()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performLogout() {
+        val ctx = requireContext()
+        
+        // 1. Stop MeshService
+        com.meshcomm.mesh.MeshService.stop(ctx)
+        
+        // 2. Clear session from PrefsHelper
+        PrefsHelper.clearSession(ctx)
+        
+        // 3. Navigate to SetupActivity with cleared backstack
+        try {
+            val intent = android.content.Intent(ctx, Class.forName("com.meshcomm.ui.setup.SetupActivity")).apply {
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            requireActivity().finish()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during logout navigation", e)
+        }
     }
 
     private fun refreshEmergencyContactsUI() {

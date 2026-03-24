@@ -19,7 +19,7 @@
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
         android:usesPermissionFlags="neverForLocation" tools:targetApi="tiramisu"/>
 
-    <!-- Location (needed for BLE scanning + WiFi Direct + GPS) -->
+    <!-- Location (needed for BLE scanning + Wi-Fi Direct + GPS) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
@@ -30,6 +30,7 @@
 
     <!-- Battery + wake lock -->
     <uses-permission android:name="android.permission.BATTERY_STATS" tools:ignore="ProtectedPermissions"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
@@ -45,7 +46,7 @@
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
 
     <!-- SMS for emergency alerts -->
-    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <!-- <uses-permission android:name="android.permission.SEND_SMS"/> -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 
     <!-- Features -->
