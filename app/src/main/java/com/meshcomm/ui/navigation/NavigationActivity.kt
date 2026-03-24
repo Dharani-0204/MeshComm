@@ -34,13 +34,23 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
         private const val TAG = "NavigationActivity"
         private const val LOCATION_PERMISSION_REQUEST = 1001
 
-        // Location update settings
-        private const val MIN_LOCATION_UPDATE_TIME = 3000L // 3 seconds
-        private const val MIN_LOCATION_UPDATE_DISTANCE = 5f // 5 meters
+        // Location update settings - enhanced for Swiggy-like experience
+        private const val MIN_LOCATION_UPDATE_TIME = 3000L // 3 seconds for real-time feel
+        private const val MIN_LOCATION_UPDATE_DISTANCE = 3f // 3 meters for precise tracking
 
         // Distance thresholds
         private const val ARRIVAL_THRESHOLD_METERS = 10f
         private const val CLOSE_DISTANCE_METERS = 100f
+        private const val VERY_CLOSE_DISTANCE_METERS = 50f
+
+        // UI update intervals - Swiggy-like frequent updates
+        private const val LIVE_UPDATE_INTERVAL = 3000L // Update UI every 3 seconds
+        private const val DISTANCE_CALCULATION_INTERVAL = 1000L // Calculate distance every 1 second
+        private const val ETA_CALCULATION_INTERVAL = 5000L // Update ETA every 5 seconds
+
+        // Speed and movement tracking
+        private const val MIN_SPEED_FOR_ETA = 0.5f // m/s - minimum speed to calculate ETA
+        private const val SPEED_SMOOTHING_FACTOR = 0.3f // For smoothing speed calculations
 
         fun start(
             context: Context,
@@ -68,14 +78,38 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
     private var destinationName = ""
     private var currentLocation: Location? = null
 
+    // Enhanced tracking for Swiggy-like experience
+    private var previousLocation: Location? = null
+    private var currentSpeed: Float = 0f // m/s
+    private var averageSpeed: Float = 0f // m/s for ETA calculation
+    private var totalDistanceTraveled: Float = 0f
+    private var initialDistance: Float = 0f
+    private var estimatedTimeArrival: String = "Calculating..."
+    private var navigationStartTime: Long = 0L
+
+    // Movement tracking
+    private val recentSpeeds = mutableListOf<Float>()
+    private val locationHistory = mutableListOf<Location>()
+    private var lastMovementTime: Long = 0L
+
     // Map overlays
     private var startMarker: Marker? = null
     private var destinationMarker: Marker? = null
     private var routeLine: Polyline? = null
+    private var pathTrail: Polyline? = null // Track the path taken
 
     // UI update tracking
     private var lastDistanceUpdate = 0L
-    private val distanceUpdateInterval = 1000L // Update distance every 1 second
+    private var lastETAUpdate = 0L
+    private var lastLiveUpdate = 0L
+
+    // Runnable for live updates
+    private val liveUpdateRunnable = object : Runnable {
+        override fun run() {
+            updateLiveTracking()
+            handler.postDelayed(this, LIVE_UPDATE_INTERVAL)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,8 +129,15 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
         setupLocationManager()
         setupClickListeners()
 
+        // Initialize navigation tracking
+        navigationStartTime = System.currentTimeMillis()
+        initialDistance = calculateDistance(0.0, 0.0, destinationLat, destinationLng) // Will be updated with real location
+
         // Request location permissions and start navigation
         checkPermissionsAndStartNavigation()
+
+        // Start live tracking updates (Swiggy-like)
+        handler.post(liveUpdateRunnable)
     }
 
     private fun extractDestinationFromIntent() {
@@ -104,7 +145,21 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
         destinationLng = intent.getDoubleExtra("destinationLng", 0.0)
         destinationName = intent.getStringExtra("destinationName") ?: "Destination"
 
+        // Validate coordinates
+        if (!isValidCoordinate(destinationLat, destinationLng)) {
+            Log.e(TAG, "Invalid coordinates received: $destinationLat, $destinationLng")
+            Toast.makeText(this, "Invalid destination coordinates", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
         Log.d(TAG, "Navigation to: $destinationName at $destinationLat, $destinationLng")
+    }
+
+    private fun isValidCoordinate(lat: Double, lng: Double): Boolean {
+        return lat != 0.0 || lng != 0.0 &&
+               lat >= -90.0 && lat <= 90.0 &&
+               lng >= -180.0 && lng <= 180.0
     }
 
     private fun setupToolbar() {
@@ -211,12 +266,174 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
     }
 
     override fun onLocationChanged(location: Location) {
-        Log.d(TAG, "Location changed: ${location.latitude}, ${location.longitude} (accuracy: ${location.accuracy}m)")
+        Log.d(TAG, "Location changed: ${location.latitude}, ${location.longitude} (accuracy: ${location.accuracy}m, speed: ${location.speed}m/s)")
 
+        val previousLoc = currentLocation
         currentLocation = location
+
+        // Update location UI immediately
         updateLocationUI(location)
-        updateDistanceAndRoute(location)
-        updateLocationStatus("GPS active")
+
+        // Enhanced movement tracking
+        if (previousLoc != null) {
+            updateMovementTracking(previousLoc, location)
+        } else {
+            // First location - calculate initial distance
+            initialDistance = calculateDistance(
+                location.latitude, location.longitude,
+                destinationLat, destinationLng
+            )
+            Log.d(TAG, "Initial distance to destination: ${initialDistance}m")
+        }
+
+        // Add to location history for path tracking
+        locationHistory.add(location)
+        if (locationHistory.size > 50) { // Keep only recent 50 locations
+            locationHistory.removeAt(0)
+        }
+
+        // Update distance and route (throttled)
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastDistanceUpdate >= DISTANCE_CALCULATION_INTERVAL) {
+            lastDistanceUpdate = currentTime
+            updateDistanceAndRoute(location)
+        }
+
+        updateLocationStatus("GPS active - ${location.accuracy.roundToInt()}m accuracy")
+    }
+
+    private fun updateMovementTracking(previousLoc: Location, currentLoc: Location) {
+        // Calculate distance moved
+        val distanceMoved = previousLoc.distanceTo(currentLoc)
+        totalDistanceTraveled += distanceMoved
+
+        // Calculate current speed
+        val timeDiff = (currentLoc.time - previousLoc.time) / 1000f // seconds
+        if (timeDiff > 0) {
+            currentSpeed = if (currentLoc.hasSpeed() && currentLoc.speed > 0) {
+                currentLoc.speed // Use GPS speed if available
+            } else {
+                distanceMoved / timeDiff // Calculate from distance/time
+            }
+
+            // Add to recent speeds for averaging
+            recentSpeeds.add(currentSpeed)
+            if (recentSpeeds.size > 10) { // Keep only recent 10 speed readings
+                recentSpeeds.removeAt(0)
+            }
+
+            // Calculate smoothed average speed
+            averageSpeed = if (recentSpeeds.isNotEmpty()) {
+                recentSpeeds.average().toFloat()
+            } else {
+                currentSpeed
+            }
+
+            lastMovementTime = currentLoc.time
+
+            Log.d(TAG, "Movement: ${distanceMoved}m in ${timeDiff}s, speed: ${currentSpeed}m/s, avg: ${averageSpeed}m/s")
+        }
+    }
+
+    private fun updateLiveTracking() {
+        currentLocation?.let { location ->
+            val currentTime = System.currentTimeMillis()
+
+            // Calculate current distance to destination
+            val currentDistance = calculateDistance(
+                location.latitude, location.longitude,
+                destinationLat, destinationLng
+            )
+
+            // Update ETA calculation
+            if (currentTime - lastETAUpdate >= ETA_CALCULATION_INTERVAL) {
+                lastETAUpdate = currentTime
+                updateETA(currentDistance)
+            }
+
+            // Update progress and live stats
+            updateLiveProgress(currentDistance)
+
+            // Update path trail visualization
+            updatePathTrail()
+
+            Log.d(TAG, "Live tracking: ${currentDistance}m to go, ETA: $estimatedTimeArrival, speed: ${averageSpeed}m/s")
+        }
+    }
+
+    private fun updateETA(currentDistance: Float) {
+        estimatedTimeArrival = when {
+            averageSpeed < MIN_SPEED_FOR_ETA -> "Calculating..."
+            currentDistance <= ARRIVAL_THRESHOLD_METERS -> "Arriving now!"
+            else -> {
+                val etaSeconds = (currentDistance / averageSpeed).toInt()
+                val etaMinutes = etaSeconds / 60
+                val etaSecondsRemainder = etaSeconds % 60
+
+                when {
+                    etaMinutes > 60 -> "${etaMinutes / 60}h ${etaMinutes % 60}m"
+                    etaMinutes > 0 -> "${etaMinutes}m ${etaSecondsRemainder}s"
+                    else -> "${etaSecondsRemainder}s"
+                }
+            }
+        }
+    }
+
+    private fun updateLiveProgress(currentDistance: Float) {
+        // Calculate progress percentage
+        val progressPercentage = if (initialDistance > 0) {
+            ((initialDistance - currentDistance) / initialDistance * 100).coerceIn(0f, 100f)
+        } else {
+            0f
+        }
+
+        // Update UI with progress
+        runOnUiThread {
+            // You could add a progress bar to the layout and update it here
+            val progressText = when {
+                progressPercentage > 90 -> "Almost there!"
+                progressPercentage > 75 -> "Nearly arrived"
+                progressPercentage > 50 -> "Halfway there"
+                progressPercentage > 25 -> "Making progress"
+                else -> "Just started"
+            }
+
+            // Update direction text with more context
+            val direction = currentLocation?.let { loc ->
+                val bearing = calculateBearing(
+                    loc.latitude, loc.longitude,
+                    destinationLat, destinationLng
+                )
+                bearingToDirection(bearing)
+            } ?: "Unknown"
+
+            val speedText = if (averageSpeed > MIN_SPEED_FOR_ETA) {
+                " • ${(averageSpeed * 3.6).roundToInt()} km/h"
+            } else ""
+
+            binding.tvDirection.text = "Head $direction$speedText • $progressText"
+        }
+    }
+
+    private fun updatePathTrail() {
+        if (locationHistory.size < 2) return
+
+        // Remove existing path trail
+        pathTrail?.let { mapView.overlays.remove(it) }
+
+        // Create path trail from location history
+        pathTrail = Polyline().apply {
+            val points = locationHistory.map { GeoPoint(it.latitude, it.longitude) }
+            setPoints(points)
+
+            outlinePaint.apply {
+                color = ContextCompat.getColor(this@NavigationActivity, R.color.mesh_active)
+                strokeWidth = 4f
+                alpha = 180 // Semi-transparent for trail effect
+            }
+        }
+
+        mapView.overlays.add(1, pathTrail) // Add above heatmap but below markers
     }
 
     private fun updateLocationUI(location: Location) {
@@ -245,35 +462,91 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
     }
 
     private fun updateDistanceAndRoute(location: Location) {
-        val currentTime = System.currentTimeMillis()
-
-        // Throttle distance updates to avoid UI spam
-        if (currentTime - lastDistanceUpdate < distanceUpdateInterval) {
-            return
-        }
-        lastDistanceUpdate = currentTime
-
         // Calculate distance to destination
         val distance = calculateDistance(
             location.latitude, location.longitude,
             destinationLat, destinationLng
         )
 
-        // Update distance display
-        updateDistanceDisplay(distance)
+        // Update distance display with enhanced info
+        updateEnhancedDistanceDisplay(distance)
 
         // Update route line
         updateRouteLine(location)
 
-        // Check arrival
-        checkArrival(distance)
+        // Check arrival with enhanced feedback
+        checkArrivalWithFeedback(distance)
 
-        // Auto-zoom if very close to destination
-        if (distance < CLOSE_DISTANCE_METERS) {
-            autoZoomToShowBothPoints(location)
+        // Auto-zoom based on distance for better UX
+        when {
+            distance < VERY_CLOSE_DISTANCE_METERS -> {
+                // Very close - zoom in for precision
+                mapView.controller.setZoom(19.0)
+            }
+            distance < CLOSE_DISTANCE_METERS -> {
+                autoZoomToShowBothPoints(location)
+            }
         }
 
         mapView.invalidate()
+    }
+
+    private fun updateEnhancedDistanceDisplay(distanceMeters: Float) {
+        val distanceText = when {
+            distanceMeters < 1000 -> "${distanceMeters.roundToInt()} m away"
+            else -> "${(distanceMeters / 1000).round(1)} km away"
+        }
+
+        // Enhanced distance display with context
+        val contextText = when {
+            distanceMeters <= ARRIVAL_THRESHOLD_METERS -> "🎯 You've arrived!"
+            distanceMeters <= VERY_CLOSE_DISTANCE_METERS -> "🚶 Almost there"
+            distanceMeters <= CLOSE_DISTANCE_METERS -> "📍 Very close"
+            distanceMeters <= 500 -> "🔄 Approaching"
+            else -> "🗺️ En route"
+        }
+
+        val etaText = if (estimatedTimeArrival != "Calculating..." && distanceMeters > ARRIVAL_THRESHOLD_METERS) {
+            " • ETA $estimatedTimeArrival"
+        } else ""
+
+        binding.tvDistance.text = "$contextText • $distanceText$etaText"
+
+        Log.d(TAG, "Enhanced distance updated: $distanceText, ETA: $estimatedTimeArrival")
+    }
+
+    private fun checkArrivalWithFeedback(distance: Float) {
+        when {
+            distance <= ARRIVAL_THRESHOLD_METERS -> {
+                if (binding.layoutArrival.visibility != View.VISIBLE) {
+                    binding.layoutArrival.visibility = View.VISIBLE
+                    binding.tvDistance.text = "🎯 Arrived!"
+                    binding.tvDirection.text = "You have reached your destination"
+
+                    // Enhanced arrival feedback
+                    Toast.makeText(
+                        this,
+                        "🎉 Navigation completed to $destinationName",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Stop live updates on arrival
+                    handler.removeCallbacks(liveUpdateRunnable)
+
+                    Log.i(TAG, "Navigation completed - destination reached")
+                }
+            }
+            distance <= VERY_CLOSE_DISTANCE_METERS -> {
+                // Very close feedback
+                if (binding.layoutArrival.visibility == View.GONE) {
+                    binding.tvDirection.text = "${binding.tvDirection.text} • Almost there!"
+                }
+                binding.layoutArrival.visibility = View.GONE
+            }
+            else -> {
+                binding.layoutArrival.visibility = View.GONE
+            }
+        }
     }
 
     private fun calculateDistance(
@@ -283,27 +556,6 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
         val results = FloatArray(1)
         Location.distanceBetween(startLat, startLng, endLat, endLng, results)
         return results[0] // Distance in meters
-    }
-
-    private fun updateDistanceDisplay(distanceMeters: Float) {
-        val distanceText = when {
-            distanceMeters < 1000 -> "${distanceMeters.roundToInt()} m away"
-            else -> "${(distanceMeters / 1000).round(1)} km away"
-        }
-
-        binding.tvDistance.text = distanceText
-
-        // Update direction hint
-        currentLocation?.let { location ->
-            val bearing = calculateBearing(
-                location.latitude, location.longitude,
-                destinationLat, destinationLng
-            )
-            val direction = bearingToDirection(bearing)
-            binding.tvDirection.text = "Head $direction"
-        }
-
-        Log.d(TAG, "Distance updated: $distanceText")
     }
 
     private fun calculateBearing(
@@ -374,21 +626,6 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
         }
         mapView.overlays.add(destinationMarker)
         mapView.invalidate()
-    }
-
-    private fun checkArrival(distance: Float) {
-        if (distance <= ARRIVAL_THRESHOLD_METERS) {
-            binding.tvDistance.text = "Arrived!"
-            binding.tvDirection.text = "You have reached your destination"
-
-            // Show arrival notification
-            if (binding.layoutArrival.visibility != View.VISIBLE) {
-                binding.layoutArrival.visibility = View.VISIBLE
-                Toast.makeText(this, "You have arrived at $destinationName", Toast.LENGTH_LONG).show()
-            }
-        } else {
-            binding.layoutArrival.visibility = View.GONE
-        }
     }
 
     private fun centerMapOnCurrentLocation() {
@@ -496,6 +733,11 @@ class NavigationActivity : AppCompatActivity(), LocationListener {
     override fun onDestroy() {
         super.onDestroy()
         locationManager.removeUpdates(this)
+
+        // Stop live updates to prevent memory leaks
+        handler.removeCallbacks(liveUpdateRunnable)
+
+        Log.d(TAG, "Navigation session ended. Total distance traveled: ${totalDistanceTraveled.roundToInt()}m")
     }
 
     // Utility extensions
