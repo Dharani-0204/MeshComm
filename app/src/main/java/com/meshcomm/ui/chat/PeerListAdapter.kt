@@ -28,16 +28,11 @@ class PeerListAdapter(
         private val binding: ItemPeerBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        init {
-            binding.root.setOnClickListener {
-                val position = bindingAdapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    onPeerClick(getItem(position))
-                }
-            }
-        }
-
         fun bind(peer: PeerDevice) {
+            binding.root.setOnClickListener {
+                onPeerClick(peer)
+            }
+
             binding.apply {
                 tvPeerName.text = peer.deviceName
                 tvPeerId.text = "ID: ${peer.deviceId.take(8)}"

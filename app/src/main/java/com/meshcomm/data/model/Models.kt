@@ -2,7 +2,7 @@ package com.meshcomm.data.model
 
 import java.util.UUID
 
-enum class MessageType { BROADCAST, DIRECT, SOS, INFO }
+enum class MessageType { BROADCAST, DIRECT, SOS, INFO, HANDSHAKE }
 enum class MessageStatus { SENT, RELAYED, DELIVERED }
 enum class UserRole { CIVILIAN, RESCUER, AUTHORITY }
 
@@ -49,13 +49,17 @@ data class User(
 
 data class PeerDevice(
     val deviceId: String,
-    val deviceName: String,
+    var deviceName: String,
     val transport: TransportType,
     val rssi: Int = 0,
-    val batteryLevel: Int = 100,
-    val role: UserRole = UserRole.CIVILIAN,
+    var batteryLevel: Int = 100,
+    var role: UserRole = UserRole.CIVILIAN,
     var isConnected: Boolean = false,
-    val connectedAt: Long = System.currentTimeMillis()
+    val connectedAt: Long = System.currentTimeMillis(),
+    var latitude: Double = 0.0,
+    var longitude: Double = 0.0,
+    var lastSeen: Long = System.currentTimeMillis(),
+    var isSosActive: Boolean = false
 )
 
 enum class TransportType { BLUETOOTH, WIFI_DIRECT }

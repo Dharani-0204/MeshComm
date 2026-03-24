@@ -7,6 +7,7 @@ import com.meshcomm.crypto.EncryptionUtil
 import com.meshcomm.data.model.Message
 import com.meshcomm.data.model.MessageStatus
 import com.meshcomm.data.model.MessageType
+import com.meshcomm.data.model.UserRole
 import com.meshcomm.data.repository.MessageRepository
 import com.meshcomm.utils.BatteryHelper
 import com.meshcomm.utils.PrefsHelper
@@ -48,7 +49,23 @@ class MessageRouter(
     }
 
     private suspend fun processMessage(message: Message, fromPeerId: String) {
-        // 1. Deduplication
+        // 1. Handshake handling
+        if (message.type == MessageType.HANDSHAKE) {
+            Log.i(TAG, "Handshake received from ${message.senderName} (${message.senderId})")
+            val role = try { UserRole.valueOf(message.content) } catch (e: Exception) { UserRole.CIVILIAN }
+            PeerRegistry.updatePeerInfo(
+                fromPeerId, 
+                message.senderId, 
+                message.senderName, 
+                role, 
+                message.batteryLevel,
+                message.latitude,
+                message.longitude
+            )
+            return
+        }
+
+        // 2. Deduplication
         if (seenMessages.contains(message.messageId)) {
             Log.d(TAG, "Duplicate message ignored: ${message.messageId}")
             return
@@ -56,72 +73,80 @@ class MessageRouter(
         seenMessages.add(message.messageId)
         repository.markSeen(message.messageId)
 
-        // 2. Decrypt if needed
+        // 3. Update peer location if present in any message
+        if (message.latitude != 0.0 && message.longitude != 0.0) {
+            PeerRegistry.updatePeerLocation(
+                message.senderId, 
+                message.latitude, 
+                message.longitude,
+                message.type == MessageType.SOS
+            )
+        }
+
+        // 4. Decrypt if needed
         val decrypted = EncryptionUtil.decryptMessage(message)
 
-        // 3. Determine if this device is the intended recipient
+        // 5. Determine if this device is the intended recipient
         val isForMe = decrypted.targetId == null || decrypted.targetId == selfId
         val isSOS   = decrypted.type == MessageType.SOS
         val isSelf  = decrypted.senderId == selfId
 
-        // 4. Store and emit if relevant to this user (but NOT if sender is self)
+        // 6. Store and emit if relevant to this user (but NOT if sender is self)
         if ((isForMe || isSOS) && !isSelf) {
             val stored = decrypted.copy(status = MessageStatus.DELIVERED)
             repository.saveMessage(stored)
             _incomingMessages.emit(stored)
-            Log.i(TAG, "Message delivered to user: type=${decrypted.type}, from=${decrypted.senderName}")
+            Log.i(TAG, "Message delivered: type=${decrypted.type}, from=${decrypted.senderName}")
         } else if (isSelf) {
             Log.d(TAG, "Ignoring own message echo: ${message.messageId}")
         } else {
-            // Store relayed messages too (for audit)
+            // Relayed messages
             repository.saveMessage(decrypted.copy(status = MessageStatus.RELAYED))
-            Log.d(TAG, "Message stored as relayed: ${message.messageId}")
         }
 
-        // 5. Forward decision
+        // 7. Forwarding
         val battery = BatteryHelper.getLevel(context)
-        val shouldRelay = battery > 30
-                       && decrypted.ttl > 0
-                       && decrypted.senderId != selfId
+        val shouldRelay = battery > 30 && decrypted.ttl > 0 && decrypted.senderId != selfId
 
         if (shouldRelay) {
-            val connectedDevices = transportLayer.getConnectedIds().size
-            val forwarded = decrypted.copy(
-                ttl = decrypted.ttl - 1,
-                status = MessageStatus.RELAYED
-            )
-            // Do NOT re-encrypt — encryption was done by original sender
-            val json = gson.toJson(forwarded)
-            transportLayer.sendToAllExcept(json, excludeId = fromPeerId)
-            Log.i(TAG, "Message forwarded to $connectedDevices devices (excluding $fromPeerId): ${message.messageId}")
-        } else {
-            Log.d(TAG, "Message NOT forwarded: battery=$battery%, ttl=${decrypted.ttl}, isSelf=$isSelf")
+            val forwarded = decrypted.copy(ttl = decrypted.ttl - 1, status = MessageStatus.RELAYED)
+            transportLayer.sendToAllExcept(gson.toJson(forwarded), fromPeerId)
         }
     }
 
     /** Send a new message originating from this device */
     fun sendMessage(message: Message) {
         scope.launch {
-            val prepared = EncryptionUtil.encryptMessage(message)
-            seenMessages.add(prepared.messageId)  // Don't process own echoes
-            repository.saveMessage(prepared.copy(status = MessageStatus.SENT))
+            val prepared = if (message.type == MessageType.HANDSHAKE) message else EncryptionUtil.encryptMessage(message)
+            if (message.type != MessageType.HANDSHAKE) {
+                seenMessages.add(prepared.messageId)
+                repository.saveMessage(prepared.copy(status = MessageStatus.SENT))
+            }
+            
             val json = gson.toJson(prepared)
-
-            val connectedDevices = transportLayer.getConnectedIds().size
             transportLayer.sendToAll(json)
 
-            Log.i(TAG, "Message sent to $connectedDevices devices: type=${prepared.type}, id=${prepared.messageId}")
-
-            // For SOS messages, DO NOT emit to sender's own UI (no self-notification)
-            // For other messages, show in own UI immediately
-            if (prepared.type != MessageType.SOS) {
+            if (prepared.type != MessageType.SOS && prepared.type != MessageType.HANDSHAKE) {
                 _incomingMessages.emit(prepared)
-                Log.d(TAG, "Message emitted to own UI: ${prepared.messageId}")
-            } else {
-                Log.d(TAG, "SOS NOT emitted to sender UI (prevents self-notification): ${prepared.messageId}")
             }
         }
     }
 
-    fun getSeenCount(): Int = seenMessages.size
+    fun sendHandshake() {
+        val deviceId = PrefsHelper.getUserId(context)
+        val location = (context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager)
+            ?.getLastKnownLocation(android.location.LocationManager.PASSIVE_PROVIDER)
+
+        val handshake = Message(
+            senderId = deviceId,
+            senderName = PrefsHelper.getUserName(context),
+            type = MessageType.HANDSHAKE,
+            content = PrefsHelper.getUserRole(context).name,
+            batteryLevel = BatteryHelper.getLevel(context),
+            latitude = location?.latitude ?: 0.0,
+            longitude = location?.longitude ?: 0.0,
+            deviceId = deviceId
+        )
+        sendMessage(handshake)
+    }
 }

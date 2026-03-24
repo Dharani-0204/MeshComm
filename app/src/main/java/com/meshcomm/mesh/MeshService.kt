@@ -13,6 +13,7 @@ import android.util.Log
 import com.meshcomm.data.db.AppDatabase
 import com.meshcomm.data.model.Message
 import com.meshcomm.data.model.MessageType
+import com.meshcomm.data.model.TransportType
 import com.meshcomm.data.repository.MessageRepository
 import com.meshcomm.location.LocationProvider
 import com.meshcomm.sos.SOSManager
@@ -45,7 +46,7 @@ class MeshService : Service() {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     lateinit var transportLayer: TransportLayer
-    lateinit var btManager: BluetoothMeshManager
+    lateinit var bleManager: BleMeshManager
     lateinit var wifiManager: WiFiDirectManager
     lateinit var messageRouter: MessageRouter
     lateinit var sosManager: SOSManager
@@ -93,22 +94,35 @@ class MeshService : Service() {
         storeAndForward = StoreAndForwardQueue(this, transportLayer)
         ackManager = AcknowledgementManager(this, messageRouter)
 
-        // Flush pending messages whenever a new peer connects
+        bleManager = BleMeshManager(this)
+        wifiManager = WiFiDirectManager(this, transportLayer)
+
+        // Handshake on new peer
         scope.launch {
             PeerRegistry.peerFlow.collect { peers ->
-                if (peers.isNotEmpty() && storeAndForward.getPendingCount() > 0) {
-                    Log.d(TAG, "New peer connected, flushing ${storeAndForward.getPendingCount()} pending messages")
-                    storeAndForward.flushToAllPeers()
+                if (peers.isNotEmpty()) {
+                    messageRouter.sendHandshake()
+                    
+                    // Register BLE senders in transport layer dynamically
+                    peers.forEach { peer ->
+                        if (peer.transport == TransportType.BLUETOOTH) {
+                            transportLayer.registerSender(peer.deviceId, object : TransportLayer.Sender {
+                                override fun send(data: String) {
+                                    bleManager.sendData(peer.deviceId, data)
+                                }
+                                override fun close() {}
+                            })
+                        }
+                    }
+
+                    if (storeAndForward.getPendingCount() > 0) {
+                        storeAndForward.flushToAllPeers()
+                    }
                 }
             }
         }
 
-        btManager = BluetoothMeshManager(this, transportLayer)
-        wifiManager = WiFiDirectManager(this, transportLayer)
-
-        // Wire incoming messages from transport to router
         PeerRegistry.registerMessageCallback { data, fromId ->
-            Log.d(TAG, "Received message from $fromId: ${data.take(50)}")
             messageRouter.onRawDataReceived(data, fromId)
         }
 
@@ -125,34 +139,20 @@ class MeshService : Service() {
         scope.launch {
             messageRouter.incomingMessages.collect { msg ->
                 val myDeviceId = PrefsHelper.getUserId(this@MeshService)
-
-                // Filter out self-generated messages to prevent self-notification
-                if (msg.deviceId == myDeviceId) {
-                    Log.d(TAG, "Ignoring self-generated message: ${msg.messageId}")
-                    return@collect
-                }
+                if (msg.deviceId == myDeviceId || msg.type == MessageType.HANDSHAKE) return@collect
 
                 when (msg.type) {
                     MessageType.SOS -> {
-                        Log.i(TAG, "Received SOS message from ${msg.senderName} (deviceId: ${msg.deviceId})")
                         sosManager.triggerSOSAlert()
                         NotificationHelper.showSOSNotification(this@MeshService, msg.senderName)
                     }
                     MessageType.BROADCAST, MessageType.DIRECT -> {
-                        Log.d(TAG, "Received ${msg.type} message from ${msg.senderName} (deviceId: ${msg.deviceId})")
                         NotificationHelper.showMessageNotification(
                             this@MeshService, msg.senderName,
                             msg.content.take(60)
                         )
                     }
-                    MessageType.INFO -> {
-                        Log.d(TAG, "Received INFO message from ${msg.senderName} (deviceId: ${msg.deviceId})")
-                        // INFO messages are typically status updates, show as regular notification
-                        NotificationHelper.showMessageNotification(
-                            this@MeshService, "📍 ${msg.senderName}",
-                            msg.content.take(60)
-                        )
-                    }
+                    else -> {}
                 }
             }
         }
@@ -166,47 +166,34 @@ class MeshService : Service() {
         registerReceiver(wifiP2pReceiver, filter)
 
         // Start mesh
-        Log.d(TAG, "Starting Bluetooth mesh...")
-        btManager.startServer()
-        btManager.startAdvertising()
-        btManager.startDiscovery()
-        btManager.startReconnectionLoop()
-
-        Log.d(TAG, "Starting WiFi Direct...")
+        bleManager.start()
         wifiManager.startDiscovery()
 
-        // Periodic discovery every 30 seconds
+        // Continuous discovery loop
         scope.launch {
             while (isActive) {
-                delay(30_000) // 30 seconds
-                Log.d(TAG, "Periodic discovery: rescanning for peers")
-                btManager.startDiscovery()
+                delay(15_000)
+                bleManager.startScan()
                 wifiManager.startDiscovery()
+                messageRouter.sendHandshake() // Re-broadcast identity periodically
             }
         }
-
-        Log.i(TAG, "MeshService started successfully")
     }
 
     override fun onBind(intent: Intent): IBinder {
-        Log.d(TAG, "MeshService bound")
         return binder
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "MeshService stopping...")
         scope.cancel()
-        btManager.stopAll()
+        bleManager.stop()
         wifiManager.stopAll()
         locationProvider.stopUpdates()
         transportLayer.disconnectAll()
         PeerRegistry.clear()
-        unregisterReceiver(wifiP2pReceiver)
-        Log.i(TAG, "MeshService stopped")
+        try { unregisterReceiver(wifiP2pReceiver) } catch (e: Exception) {}
     }
-
-    // ── Public API for UI ─────────────────────────────────────────────────────
 
     fun sendBroadcastMessage(content: String, includeLocation: Boolean) {
         val (lat, lon) = if (includeLocation) locationProvider.getLastLatLon() else Pair(0.0, 0.0)
@@ -222,11 +209,7 @@ class MeshService : Service() {
             type = MessageType.BROADCAST,
             deviceId = deviceId
         )
-        if (PeerRegistry.getConnectedCount() == 0) {
-            storeAndForward.enqueue(msg)
-        }
         messageRouter.sendMessage(msg)
-        Log.d(TAG, "Broadcast message sent with deviceId: $deviceId")
     }
 
     fun sendDirectMessage(targetId: String, targetName: String, content: String, includeLocation: Boolean) {
@@ -244,11 +227,7 @@ class MeshService : Service() {
             type = MessageType.DIRECT,
             deviceId = deviceId
         )
-        if (PeerRegistry.getConnectedCount() == 0) {
-            storeAndForward.enqueue(msg)
-        }
         messageRouter.sendMessage(msg)
-        Log.d(TAG, "Direct message sent to $targetId with deviceId: $deviceId")
     }
 
     fun sendSOS(customMessage: String = "EMERGENCY! I need help!") {
