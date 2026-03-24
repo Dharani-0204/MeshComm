@@ -82,6 +82,7 @@
 
     <!-- Status Colors -->
     <color name="mesh_active">#2E7D32</color>
+    <color name="mesh_inactive">#9E9E9E</color>
     <color name="mesh_offline">#757575</color>
     <color name="battery_low">#F57F17</color>
     <color name="battery_ok">#2E7D32</color>
