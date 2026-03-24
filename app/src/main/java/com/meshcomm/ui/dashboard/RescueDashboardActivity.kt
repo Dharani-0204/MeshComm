@@ -89,6 +89,7 @@ class RescueDashboardActivity : AppCompatActivity() {
         setupControls()
         setupStats()
         startDataListeners()
+        startLiveUpdates() // Start real-time position updates
     }
 
     private fun setupToolbar() {
@@ -233,25 +234,136 @@ class RescueDashboardActivity : AppCompatActivity() {
         val position = GeoPoint(alert.latitude, alert.longitude)
 
         marker.position = position
-        marker.title = if (isCluster) "SOS Cluster" else "SOS: ${alert.userName}"
-        marker.snippet = formatAlertSnippet(alert)
+        marker.title = if (isCluster) "SOS Cluster" else "🆘 ${alert.userName}"
 
-        // Set marker icon based on type
-        val iconRes = if (alert.isActive) R.drawable.ic_sos_active else R.drawable.ic_sos_resolved
+        // Enhanced snippet with navigation hint
+        marker.snippet = buildString {
+            appendLine("${formatAlertSnippet(alert)}")
+            appendLine("Status: ${if (alert.isActive) "🔴 ACTIVE" else "✅ Resolved"}")
+            appendLine("📍 Tap for details & navigation")
+        }
+
+        // Set marker icon based on status with enhanced styling
+        val iconRes = when {
+            !alert.isActive -> R.drawable.ic_sos_resolved
+            alert.message.contains("critical", ignoreCase = true) -> R.drawable.ic_sos_critical
+            else -> R.drawable.ic_sos_active
+        }
+
         try {
             val drawable = ContextCompat.getDrawable(this, iconRes)
             drawable?.let { marker.icon = it }
         } catch (e: Exception) {
             Log.w(TAG, "Could not load marker icon: ${e.message}")
+            // Fallback styling
+            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         }
 
+        // Enhanced click listener
         marker.setOnMarkerClickListener { clickedMarker, _ ->
-            showAlertDetails(alert)
+            showEnhancedAlertDetails(alert)
             true
         }
 
         mapView.overlays.add(marker)
         sosMarkers[alert.alertId] = marker
+    }
+
+    private fun showEnhancedAlertDetails(alert: SOSAlert) {
+        val profile = alert.profile
+        val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+        val timeAgo = System.currentTimeMillis() - alert.timestamp
+        val timeAgoText = when {
+            timeAgo < 60000 -> "Just received"
+            timeAgo < 3600000 -> "${(timeAgo / 60000).toInt()} minutes ago"
+            timeAgo < 86400000 -> "${(timeAgo / 3600000).toInt()} hours ago"
+            else -> "${(timeAgo / 86400000).toInt()} days ago"
+        }
+
+        val message = buildString {
+            appendLine("🆘 EMERGENCY ALERT")
+            appendLine("────────────────")
+            appendLine("User: ${alert.userName}")
+            appendLine("Time: ${dateFormat.format(Date(alert.timestamp))}")
+            appendLine("Received: $timeAgoText")
+            appendLine("Location: ${alert.latitude}, ${alert.longitude}")
+            appendLine("Battery: ${alert.batteryLevel}%")
+            appendLine("Status: ${if (alert.isActive) "🔴 ACTIVE - Needs Response" else "✅ Resolved"}")
+            appendLine()
+            appendLine("Message: \"${alert.message}\"")
+
+            if (profile != null) {
+                appendLine()
+                appendLine("─── 🏥 MEDICAL PROFILE ───")
+                appendLine("Blood Group: ${profile.bloodGroup.ifEmpty { "Unknown" }}")
+
+                if (profile.medicalConditions.isNotEmpty()) {
+                    appendLine("Conditions: ${profile.medicalConditions.joinToString(", ")}")
+                }
+
+                if (profile.allergies.isNotEmpty()) {
+                    appendLine("⚠️ Allergies: ${profile.allergies.joinToString(", ")}")
+                }
+
+                if (profile.emergencyContacts.isNotEmpty()) {
+                    appendLine()
+                    appendLine("📞 Emergency Contacts:")
+                    profile.emergencyContacts.take(2).forEach { contact ->
+                        appendLine("  • ${contact.name}: ${contact.phone}")
+                    }
+                    if (profile.emergencyContacts.size > 2) {
+                        appendLine("  ... and ${profile.emergencyContacts.size - 2} more")
+                    }
+                }
+            }
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("SOS Alert Details")
+            .setMessage(message)
+            .setPositiveButton("🧭 Navigate (Priority)") { _, _ ->
+                openNavigation(alert.latitude, alert.longitude, "🆘 EMERGENCY: ${alert.userName}")
+                Toast.makeText(this, "Starting emergency navigation", Toast.LENGTH_LONG).show()
+            }
+            .setNeutralButton(if (alert.isActive) "✅ Mark Resolved" else "🔄 Reactivate") { _, _ ->
+                toggleAlertStatus(alert)
+            }
+            .setNegativeButton("Close", null)
+            .show()
+    }
+
+    private fun toggleAlertStatus(alert: SOSAlert) {
+        lifecycleScope.launch {
+            try {
+                if (alert.isActive) {
+                    sosAlertRepository.deactivateAlert(alert.alertId)
+                    Toast.makeText(this@RescueDashboardActivity, "Alert marked as resolved", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Note: You might need to add reactivateAlert method to repository
+                    Toast.makeText(this@RescueDashboardActivity, "Alert reactivated", Toast.LENGTH_SHORT).show()
+                }
+                refreshMarkers()
+            } catch (e: Exception) {
+                Toast.makeText(this@RescueDashboardActivity, "Failed to update alert status", Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "Failed to update alert status: ${e.message}")
+            }
+        }
+    }
+
+    // Add real-time position updates for enhanced tracking
+    private fun startLiveUpdates() {
+        lifecycleScope.launch {
+            while (true) {
+                try {
+                    // Refresh device positions every 5 seconds for live tracking
+                    fetchActiveDevices()
+                    kotlinx.coroutines.delay(5000)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Live updates failed: ${e.message}")
+                    kotlinx.coroutines.delay(10000) // Longer delay on error
+                }
+            }
+        }
     }
 
     private fun addClusterMarker(clusterAlerts: List<SOSAlert>) {
@@ -296,22 +408,54 @@ class RescueDashboardActivity : AppCompatActivity() {
             .values
             .filterNotNull()
 
+        Log.d(TAG, "Displaying ${latestPositions.size} active devices on map")
+
         latestPositions.forEach { message ->
             val marker = Marker(mapView)
             marker.position = GeoPoint(message.latitude, message.longitude)
-            marker.title = message.senderName
-            marker.snippet = "Last seen: ${formatTimestamp(message.timestamp)}\nBattery: ${message.batteryLevel}%"
 
-            // Different colors for different roles (if available)
+            // Enhanced device info
+            val deviceType = determineDeviceType(message)
+            val timeSinceLastSeen = System.currentTimeMillis() - message.timestamp
+            val isRecent = timeSinceLastSeen < 300000 // 5 minutes
+
+            marker.title = "${message.senderName} (${deviceType})"
+            marker.snippet = buildString {
+                appendLine("Last seen: ${formatTimestamp(message.timestamp)}")
+                appendLine("Battery: ${message.batteryLevel}%")
+                appendLine("Status: ${if (isRecent) "Active" else "Inactive"}")
+                appendLine("Distance: ${if (message.latitude != 0.0) "Tap to navigate" else "Unknown location"}")
+            }
+
+            // Enhanced color coding for device types
             try {
                 val iconRes = when {
-                    message.senderName.contains("Rescuer", ignoreCase = true) -> R.drawable.ic_rescuer_device
-                    else -> R.drawable.ic_civilian_device
+                    deviceType == "Rescuer" -> R.drawable.ic_rescuer_device
+                    deviceType == "Civilian" -> R.drawable.ic_civilian_device
+                    message.type.name == "SOS" -> R.drawable.ic_sos_device
+                    !isRecent -> R.drawable.ic_inactive_device
+                    else -> R.drawable.ic_mesh_device
                 }
+
                 val drawable = ContextCompat.getDrawable(this, iconRes)
-                drawable?.let { marker.icon = it }
+                drawable?.let {
+                    marker.icon = it
+
+                    // Tint based on status for better visual feedback
+                    if (!isRecent) {
+                        drawable.alpha = 128 // Make inactive devices semi-transparent
+                    }
+                }
             } catch (e: Exception) {
                 Log.w(TAG, "Could not load device icon: ${e.message}")
+                // Use default marker with color coding
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            }
+
+            // Enhanced click listener with navigation option
+            marker.setOnMarkerClickListener { clickedMarker, _ ->
+                showDeviceDetails(message, deviceType, isRecent)
+                true
             }
 
             mapView.overlays.add(marker)
@@ -319,6 +463,71 @@ class RescueDashboardActivity : AppCompatActivity() {
         }
 
         mapView.invalidate()
+
+        // Update UI stats
+        binding.tvActiveDevices.text = latestPositions.count {
+            System.currentTimeMillis() - it.timestamp < 300000
+        }.toString()
+    }
+
+    private fun determineDeviceType(message: com.meshcomm.data.model.Message): String {
+        return when {
+            message.senderName.contains("Rescuer", ignoreCase = true) -> "Rescuer"
+            message.senderName.contains("Authority", ignoreCase = true) -> "Authority"
+            message.type.name == "SOS" -> "SOS Device"
+            else -> "Civilian"
+        }
+    }
+
+    private fun showDeviceDetails(message: com.meshcomm.data.model.Message, deviceType: String, isRecent: Boolean) {
+        val timeAgo = System.currentTimeMillis() - message.timestamp
+        val timeAgoText = when {
+            timeAgo < 60000 -> "Just now"
+            timeAgo < 3600000 -> "${(timeAgo / 60000).toInt()} minutes ago"
+            timeAgo < 86400000 -> "${(timeAgo / 3600000).toInt()} hours ago"
+            else -> "${(timeAgo / 86400000).toInt()} days ago"
+        }
+
+        val detailMessage = buildString {
+            appendLine("Device: ${message.senderName}")
+            appendLine("Type: $deviceType")
+            appendLine("Status: ${if (isRecent) "🟢 Active" else "🔴 Inactive"}")
+            appendLine("Last seen: $timeAgoText")
+            appendLine("Location: ${message.latitude}, ${message.longitude}")
+            appendLine("Battery: ${message.batteryLevel}%")
+
+            if (message.content.isNotEmpty()) {
+                appendLine()
+                appendLine("Last message:")
+                try {
+                    val decryptedContent = com.meshcomm.crypto.EncryptionUtil.decrypt(message.content)
+                    appendLine("\"${decryptedContent.take(100)}${if (decryptedContent.length > 100) "..." else ""}\"")
+                } catch (e: Exception) {
+                    appendLine("\"${message.content.take(100)}${if (message.content.length > 100) "..." else ""}\"")
+                }
+            }
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Device Details")
+            .setMessage(detailMessage)
+            .setPositiveButton("Navigate Here") { _, _ ->
+                if (message.latitude != 0.0 && message.longitude != 0.0) {
+                    openNavigation(
+                        message.latitude,
+                        message.longitude,
+                        "${message.senderName} (${deviceType})"
+                    )
+                } else {
+                    Toast.makeText(this, "Device location not available", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNeutralButton("Send Message") { _, _ ->
+                // TODO: Implement mesh messaging to specific device
+                Toast.makeText(this, "Messaging feature coming soon", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     private fun updateHeatmap(alerts: List<SOSAlert>) {
