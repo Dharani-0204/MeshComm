@@ -1,13 +1,11 @@
 package com.meshcomm.mesh
 
-import android.bluetooth.BluetoothSocket
 import android.util.Log
-import java.io.OutputStream
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Abstraction that holds outbound write channels for each connected peer.
- * BluetoothMeshManager and WiFiDirectManager register their sockets here.
+ * Handles both Classic RFCOMM and BLE GATT write operations.
  */
 class TransportLayer {
 
@@ -15,15 +13,14 @@ class TransportLayer {
         private const val TAG = "TransportLayer"
     }
 
-    data class Channel(
-        val peerId: String,
-        val outputStream: OutputStream
-    )
+    private val channels = ConcurrentHashMap<String, java.io.OutputStream>()
 
-    private val channels = ConcurrentHashMap<String, Channel>()
-
-    fun registerChannel(peerId: String, outputStream: OutputStream) {
-        channels[peerId] = Channel(peerId, outputStream)
+    /**
+     * Registers an output stream for a peer. 
+     * For BLE, this is a custom OutputStream that triggers gatt.writeCharacteristic().
+     */
+    fun registerChannel(peerId: String, outputStream: java.io.OutputStream) {
+        channels[peerId] = outputStream
         Log.d(TAG, "Channel registered for $peerId (total: ${channels.size})")
     }
 
@@ -34,45 +31,42 @@ class TransportLayer {
 
     fun sendToAll(data: String) {
         val bytes = (data + "\n").toByteArray(Charsets.UTF_8)
-        var successCount = 0
-        channels.values.forEach { channel ->
+        channels.forEach { (id, stream) ->
             try {
-                channel.outputStream.write(bytes)
-                channel.outputStream.flush()
-                successCount++
-                Log.d(TAG, "Sent to ${channel.peerId}: ${data.take(50)}")
+                stream.write(bytes)
+                stream.flush()
+                Log.d(TAG, "Sent to $id: ${data.take(50)}")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to send to ${channel.peerId}: ${e.message}")
-                channels.remove(channel.peerId)
+                Log.e(TAG, "Failed to send to $id: ${e.message}")
+                channels.remove(id)
             }
         }
-        Log.d(TAG, "Sent to $successCount/${channels.size} peers")
     }
 
     fun sendToAllExcept(data: String, excludeId: String) {
         val bytes = (data + "\n").toByteArray(Charsets.UTF_8)
-        val targets = channels.values.filter { it.peerId != excludeId }
-        var successCount = 0
-        targets.forEach { channel ->
-            try {
-                channel.outputStream.write(bytes)
-                channel.outputStream.flush()
-                successCount++
-                Log.d(TAG, "Sent to ${channel.peerId} (excluding $excludeId): ${data.take(50)}")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to send to ${channel.peerId}: ${e.message}")
-                channels.remove(channel.peerId)
+        channels.forEach { (id, stream) ->
+            if (id != excludeId) {
+                try {
+                    stream.write(bytes)
+                    stream.flush()
+                    Log.d(TAG, "Forwarded to $id (excluding $excludeId)")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to forward to $id: ${e.message}")
+                    channels.remove(id)
+                }
             }
         }
-        Log.d(TAG, "Sent to $successCount/${targets.size} peers (excluded $excludeId)")
     }
 
     fun sendToPeer(peerId: String, data: String) {
         val bytes = (data + "\n").toByteArray(Charsets.UTF_8)
         try {
-            channels[peerId]?.outputStream?.write(bytes)
-            channels[peerId]?.outputStream?.flush()
-            Log.d(TAG, "Sent to $peerId: ${data.take(50)}")
+            channels[peerId]?.let { stream ->
+                stream.write(bytes)
+                stream.flush()
+                Log.d(TAG, "Sent to $peerId: ${data.take(50)}")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send to $peerId: ${e.message}")
             channels.remove(peerId)
@@ -82,8 +76,7 @@ class TransportLayer {
     fun getConnectedIds(): Set<String> = channels.keys.toSet()
 
     fun disconnectAll() {
-        Log.d(TAG, "Disconnecting all ${channels.size} channels")
-        channels.values.forEach { runCatching { it.outputStream.close() } }
+        channels.values.forEach { runCatching { it.close() } }
         channels.clear()
     }
 }

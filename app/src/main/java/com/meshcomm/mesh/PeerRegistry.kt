@@ -5,27 +5,50 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Thread-safe registry for mesh peers.
+ * Supports partial updates to preserve GATT connection state.
+ */
 object PeerRegistry {
     private val peers = ConcurrentHashMap<String, PeerDevice>()
     private val _peerFlow = MutableStateFlow<List<PeerDevice>>(emptyList())
     val peerFlow: StateFlow<List<PeerDevice>> = _peerFlow
 
-    // Callbacks from transport layers
     private val messageCallbacks = mutableListOf<(String, String) -> Unit>()
 
     fun addPeer(peer: PeerDevice) {
-        peers[peer.deviceId] = peer.copy(isConnected = true)
-        _peerFlow.value = peers.values.filter { it.isConnected }.toList()
+        val existing = peers[peer.deviceId]
+        // Update if it's new or metadata changed
+        if (existing == null || existing.deviceName != peer.deviceName || 
+            existing.batteryLevel != peer.batteryLevel || existing.rssi != peer.rssi) {
+            
+            peers[peer.deviceId] = peer.copy(
+                isConnected = existing?.isConnected ?: false // Preserve connection state
+            )
+            notifyObservers()
+        }
+    }
+
+    fun updateConnectionStatus(deviceId: String, isConnected: Boolean) {
+        val existing = peers[deviceId] ?: return
+        if (existing.isConnected != isConnected) {
+            peers[deviceId] = existing.copy(isConnected = isConnected)
+            notifyObservers()
+        }
     }
 
     fun removePeer(deviceId: String) {
-        peers[deviceId] = peers[deviceId]?.copy(isConnected = false) ?: return
-        _peerFlow.value = peers.values.filter { it.isConnected }.toList()
+        if (peers.remove(deviceId) != null) {
+            notifyObservers()
+        }
     }
 
-    fun getConnectedPeers(): List<PeerDevice> = _peerFlow.value
+    private fun notifyObservers() {
+        // Sort by RSSI so nearest users are at the top
+        _peerFlow.value = peers.values.toList().sortedByDescending { it.rssi }
+    }
 
-    fun getConnectedCount(): Int = _peerFlow.value.size
+    fun getConnectedCount(): Int = peers.values.count { it.isConnected }
 
     fun registerMessageCallback(cb: (data: String, fromId: String) -> Unit) {
         messageCallbacks.add(cb)
@@ -34,6 +57,8 @@ object PeerRegistry {
     fun dispatchIncoming(data: String, fromId: String) {
         messageCallbacks.forEach { it(data, fromId) }
     }
+
+    fun getConnectedPeers(): List<PeerDevice> = peers.values.filter { it.isConnected }.toList()
 
     fun clear() {
         peers.clear()

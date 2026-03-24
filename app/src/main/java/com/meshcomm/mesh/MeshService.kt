@@ -1,12 +1,8 @@
 package com.meshcomm.mesh
 
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.net.wifi.p2p.WifiP2pInfo
-import android.net.wifi.p2p.WifiP2pManager
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
@@ -22,18 +18,19 @@ import com.meshcomm.utils.PrefsHelper
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 
+/**
+ * PRODUCTION-READY MESH SERVICE
+ * Orchestrates BLE Mesh operations and message routing in the background.
+ */
 class MeshService : Service() {
 
     companion object {
         private const val TAG = "MeshService"
+        private const val DISCOVERY_INTERVAL = 30000L
 
         fun start(context: Context) {
             val intent = Intent(context, MeshService::class.java)
             context.startForegroundService(intent)
-        }
-
-        fun stop(context: Context) {
-            context.stopService(Intent(context, MeshService::class.java))
         }
     }
 
@@ -46,38 +43,15 @@ class MeshService : Service() {
 
     lateinit var transportLayer: TransportLayer
     lateinit var btManager: BluetoothMeshManager
-    lateinit var wifiManager: WiFiDirectManager
     lateinit var messageRouter: MessageRouter
     lateinit var sosManager: SOSManager
     lateinit var locationProvider: LocationProvider
     lateinit var storeAndForward: StoreAndForwardQueue
-    lateinit var ackManager: AcknowledgementManager
-
-    private val wifiP2pReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (intent.action) {
-                WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION -> {
-                    val p2pManager = getSystemService(WIFI_P2P_SERVICE) as WifiP2pManager
-                    val channel = p2pManager.initialize(context, mainLooper, null)
-                    @Suppress("DEPRECATION")
-                    p2pManager.requestPeers(channel) { peers ->
-                        wifiManager.onPeersAvailable(peers)
-                    }
-                }
-                WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION -> {
-                    val p2pManager = getSystemService(WIFI_P2P_SERVICE) as WifiP2pManager
-                    val channel = p2pManager.initialize(context, mainLooper, null)
-                    p2pManager.requestConnectionInfo(channel) { info: WifiP2pInfo ->
-                        if (info.groupFormed) wifiManager.onConnectionInfoAvailable(info)
-                    }
-                }
-            }
-        }
-    }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "MeshService starting...")
+        Log.d(TAG, "MeshService onCreate")
+        
         NotificationHelper.createChannels(this)
         startForeground(1, NotificationHelper.buildServiceNotification(this, 0))
 
@@ -87,32 +61,23 @@ class MeshService : Service() {
 
         val db = AppDatabase.get(this)
         val repo = MessageRepository(db)
-
         messageRouter = MessageRouter(this, repo, transportLayer)
         sosManager = SOSManager(this, messageRouter, locationProvider)
         storeAndForward = StoreAndForwardQueue(this, transportLayer)
-        ackManager = AcknowledgementManager(this, messageRouter)
-
-        // Flush pending messages whenever a new peer connects
-        scope.launch {
-            PeerRegistry.peerFlow.collect { peers ->
-                if (peers.isNotEmpty() && storeAndForward.getPendingCount() > 0) {
-                    Log.d(TAG, "New peer connected, flushing ${storeAndForward.getPendingCount()} pending messages")
-                    storeAndForward.flushToAllPeers()
-                }
-            }
-        }
 
         btManager = BluetoothMeshManager(this, transportLayer)
-        wifiManager = WiFiDirectManager(this, transportLayer)
 
-        // Wire incoming messages from transport to router
+        // Wire incoming messages to the router
         PeerRegistry.registerMessageCallback { data, fromId ->
-            Log.d(TAG, "Received message from $fromId: ${data.take(50)}")
             messageRouter.onRawDataReceived(data, fromId)
         }
 
-        // Update notification with peer count
+        // Start BLE Operations
+        btManager.startServer()
+        btManager.startAdvertising()
+        btManager.startDiscovery()
+
+        // Observe peer changes for UI and Notification updates
         scope.launch {
             PeerRegistry.peerFlow.collectLatest { peers ->
                 val notif = NotificationHelper.buildServiceNotification(this@MeshService, peers.size)
@@ -121,6 +86,7 @@ class MeshService : Service() {
             }
         }
 
+        // Periodic maintenance loop
         // Show notifications for incoming messages
         scope.launch {
             messageRouter.incomingMessages.collect { msg ->
@@ -178,35 +144,30 @@ class MeshService : Service() {
         // Periodic discovery every 30 seconds
         scope.launch {
             while (isActive) {
-                delay(30_000) // 30 seconds
-                Log.d(TAG, "Periodic discovery: rescanning for peers")
-                btManager.startDiscovery()
-                wifiManager.startDiscovery()
+                delay(DISCOVERY_INTERVAL)
+                if (btManager.isBluetoothEnabled()) {
+                    btManager.startDiscovery()
+                }
             }
         }
-
-        Log.i(TAG, "MeshService started successfully")
     }
 
-    override fun onBind(intent: Intent): IBinder {
-        Log.d(TAG, "MeshService bound")
-        return binder
+    override fun onBind(intent: Intent): IBinder = binder
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "MeshService stopping...")
-        scope.cancel()
         btManager.stopAll()
-        wifiManager.stopAll()
-        locationProvider.stopUpdates()
         transportLayer.disconnectAll()
-        PeerRegistry.clear()
-        unregisterReceiver(wifiP2pReceiver)
-        Log.i(TAG, "MeshService stopped")
+        locationProvider.stopUpdates()
+        scope.cancel()
+        Log.i(TAG, "MeshService destroyed")
     }
 
-    // ── Public API for UI ─────────────────────────────────────────────────────
+    // ── Public API ──
 
     fun sendBroadcastMessage(content: String, includeLocation: Boolean) {
         val (lat, lon) = if (includeLocation) locationProvider.getLastLatLon() else Pair(0.0, 0.0)
@@ -218,13 +179,11 @@ class MeshService : Service() {
             latitude = lat,
             longitude = lon,
             batteryLevel = BatteryHelper.getLevel(this),
+            type = MessageType.BROADCAST
             nearbyDevicesCount = PeerRegistry.getConnectedCount(),
             type = MessageType.BROADCAST,
             deviceId = deviceId
         )
-        if (PeerRegistry.getConnectedCount() == 0) {
-            storeAndForward.enqueue(msg)
-        }
         messageRouter.sendMessage(msg)
         Log.d(TAG, "Broadcast message sent with deviceId: $deviceId")
     }
@@ -240,18 +199,16 @@ class MeshService : Service() {
             latitude = lat,
             longitude = lon,
             batteryLevel = BatteryHelper.getLevel(this),
+            type = MessageType.DIRECT
             nearbyDevicesCount = PeerRegistry.getConnectedCount(),
             type = MessageType.DIRECT,
             deviceId = deviceId
         )
-        if (PeerRegistry.getConnectedCount() == 0) {
-            storeAndForward.enqueue(msg)
-        }
         messageRouter.sendMessage(msg)
         Log.d(TAG, "Direct message sent to $targetId with deviceId: $deviceId")
     }
 
-    fun sendSOS(customMessage: String = "EMERGENCY! I need help!") {
+    fun sendSOS(customMessage: String) {
         sosManager.sendSOS(customMessage)
     }
 
