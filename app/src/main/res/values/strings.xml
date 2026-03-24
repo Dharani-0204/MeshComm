@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">MeshComm</string>
+    <string name="app_name">ResQNet</string>
+    <string name="app_tagline">Emergency Mesh Communication Network</string>
     <string name="mesh_active">Mesh Active</string>
     <string name="mesh_offline">Mesh Offline</string>
     <string name="send">Send</string>
@@ -12,4 +13,7 @@
     <string name="include_location">Include location</string>
     <string name="sos_hint">SOS message (optional)</string>
     <string name="tap_to_send_sos">Tap to send SOS · Long press for CRITICAL</string>
+
+    <!-- Google Maps API Key - Replace with your actual key -->
+    <string name="google_maps_key">YOUR_GOOGLE_MAPS_API_KEY_HERE</string>
 </resources>

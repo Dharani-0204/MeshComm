@@ -46,6 +46,45 @@ class HomeActivity : AppCompatActivity() {
 
         setupNavigation()
         checkPermissionsAndStart()
+        // Setup Navigation
+        val navHost = supportFragmentManager
+            .findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navController = navHost.navController
+        
+        // Connect BottomNavigationView with NavController
+        binding.bottomNav.setupWithNavController(navController)
+        
+        // Set default tab to Map (force navigation on startup)
+        binding.bottomNav.selectedItemId = R.id.nav_map
+
+        // Handle back button - proper emergency app behavior with fragment state preservation
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when (navController.currentDestination?.id) {
+                    R.id.nav_map -> {
+                        // Already on map (home screen) - exit app
+                        finish()
+                    }
+                    R.id.chatDetailFragment -> {
+                        // From chat detail, use proper navigation back to preserve state
+                        if (!navController.navigateUp()) {
+                            navController.navigate(R.id.nav_chat)
+                        }
+                    }
+                    else -> {
+                        // From any other screen, go back to map (emergency default)
+                        // Use popBackStack to preserve fragment state if possible
+                        if (!navController.popBackStack(R.id.nav_map, false)) {
+                            navController.navigate(R.id.nav_map)
+                        }
+                        binding.bottomNav.selectedItemId = R.id.nav_map
+                    }
+                }
+            }
+        })
+
+        // Bind to MeshService
+        viewModel.bindService(this)
 
         // Observe mesh stats for status bar
         viewModel.meshStats.observe(this) { stats ->

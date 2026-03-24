@@ -42,6 +42,16 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
 
+    <!-- Contacts for emergency contact selection -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
+    <!-- SMS for emergency alerts -->
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+
+    <!-- Notification permission for Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <!-- Features -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
     <uses-feature android:name="android.hardware.wifi.direct" android:required="false"/>
@@ -75,6 +85,25 @@
         <activity
             android:name=".ui.home.HomeActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustResize"/>
+
+        <activity
+            android:name=".ui.dashboard.RescueDashboardActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MeshComm"
+            android:windowSoftInputMode="adjustResize"/>
+
+        <activity
+            android:name=".ui.navigation.NavigationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MeshComm"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"/>
+
+        <activity
+            android:name=".ui.map.OfflineMapManagerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MeshComm"
             android:windowSoftInputMode="adjustResize"/>
 
         <service

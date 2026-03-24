@@ -28,6 +28,7 @@ class MessageRouter(
     companion object {
         private const val TAG = "MsgRouter"
         private const val MIN_BATTERY_FOR_RELAY = 15
+        private const val TAG = "MessageRouter"
     }
 
     private val selfId = PrefsHelper.getUserId(context)
@@ -49,6 +50,11 @@ class MessageRouter(
                 processMessage(message, fromPeerId)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to parse message from $fromPeerId: ${e.message}")
+                val message = gson.fromJson(json, Message::class.java) ?: return@launch
+                Log.d(TAG, "Received message from $fromPeerId: type=${message.type}, sender=${message.senderName}")
+                processMessage(message, fromPeerId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing message: ${e.message}", e)
             }
         }
     }
@@ -56,6 +62,11 @@ class MessageRouter(
     private suspend fun processMessage(message: Message, fromPeerId: String) {
         // 1. DEDUPLICATION (CRITICAL)
         if (seenMessages.contains(message.messageId)) return
+        // 1. Deduplication
+        if (seenMessages.contains(message.messageId)) {
+            Log.d(TAG, "Duplicate message ignored: ${message.messageId}")
+            return
+        }
         seenMessages.add(message.messageId)
 
         Log.i(TAG, "New message received: ${message.messageId} from $fromPeerId")
@@ -70,6 +81,23 @@ class MessageRouter(
             _incomingMessages.emit(message)
         } else if (!isFromSelf) {
             repository.saveMessage(message.copy(status = MessageStatus.RELAYED))
+        // 3. Determine if this device is the intended recipient
+        val isForMe = decrypted.targetId == null || decrypted.targetId == selfId
+        val isSOS   = decrypted.type == MessageType.SOS
+        val isSelf  = decrypted.senderId == selfId
+
+        // 4. Store and emit if relevant to this user (but NOT if sender is self)
+        if ((isForMe || isSOS) && !isSelf) {
+            val stored = decrypted.copy(status = MessageStatus.DELIVERED)
+            repository.saveMessage(stored)
+            _incomingMessages.emit(stored)
+            Log.i(TAG, "Message delivered to user: type=${decrypted.type}, from=${decrypted.senderName}")
+        } else if (isSelf) {
+            Log.d(TAG, "Ignoring own message echo: ${message.messageId}")
+        } else {
+            // Store relayed messages too (for audit)
+            repository.saveMessage(decrypted.copy(status = MessageStatus.RELAYED))
+            Log.d(TAG, "Message stored as relayed: ${message.messageId}")
         }
 
         // 3. MULTI-HOP FLOODING (Forwarding)
@@ -83,6 +111,18 @@ class MessageRouter(
             val json = gson.toJson(forwardedMsg)
             transportLayer.sendToAllExcept(json, fromPeerId)
             Log.d(TAG, "Forwarded message ${message.messageId}, TTL left: ${forwardedMsg.ttl}")
+        if (shouldRelay) {
+            val connectedDevices = transportLayer.getConnectedIds().size
+            val forwarded = decrypted.copy(
+                ttl = decrypted.ttl - 1,
+                status = MessageStatus.RELAYED
+            )
+            // Do NOT re-encrypt — encryption was done by original sender
+            val json = gson.toJson(forwarded)
+            transportLayer.sendToAllExcept(json, excludeId = fromPeerId)
+            Log.i(TAG, "Message forwarded to $connectedDevices devices (excluding $fromPeerId): ${message.messageId}")
+        } else {
+            Log.d(TAG, "Message NOT forwarded: battery=$battery%, ttl=${decrypted.ttl}, isSelf=$isSelf")
         }
     }
 
@@ -98,6 +138,23 @@ class MessageRouter(
             // Only emit to local UI if it's NOT an SOS (SOS has special UI handling)
             if (message.type != MessageType.SOS) {
                 _incomingMessages.emit(message)
+            val prepared = EncryptionUtil.encryptMessage(message)
+            seenMessages.add(prepared.messageId)  // Don't process own echoes
+            repository.saveMessage(prepared.copy(status = MessageStatus.SENT))
+            val json = gson.toJson(prepared)
+
+            val connectedDevices = transportLayer.getConnectedIds().size
+            transportLayer.sendToAll(json)
+
+            Log.i(TAG, "Message sent to $connectedDevices devices: type=${prepared.type}, id=${prepared.messageId}")
+
+            // For SOS messages, DO NOT emit to sender's own UI (no self-notification)
+            // For other messages, show in own UI immediately
+            if (prepared.type != MessageType.SOS) {
+                _incomingMessages.emit(prepared)
+                Log.d(TAG, "Message emitted to own UI: ${prepared.messageId}")
+            } else {
+                Log.d(TAG, "SOS NOT emitted to sender UI (prevents self-notification): ${prepared.messageId}")
             }
         }
     }

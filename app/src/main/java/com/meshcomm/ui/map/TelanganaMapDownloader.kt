@@ -28,7 +28,7 @@ class TelanganaMapDownloader(
 
         // Zoom range
         private const val MIN_ZOOM = 5
-        private const val MAX_ZOOM = 15
+        private const val MAX_ZOOM = 18  // Increased to 18 for street-level detail (buildings, street names)
 
         // OSM tile servers
         private val TILE_SERVERS = listOf(
