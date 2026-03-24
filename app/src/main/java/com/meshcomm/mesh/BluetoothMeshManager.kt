@@ -5,6 +5,7 @@ import android.bluetooth.*
 import android.bluetooth.le.*
 import android.content.Context
 import android.os.BatteryManager
+import android.os.Build
 import android.os.ParcelUuid
 import android.util.Log
 import com.meshcomm.data.model.PeerDevice
@@ -22,10 +23,11 @@ class BluetoothMeshManager(
     private val transportLayer: TransportLayer
 ) {
     companion object {
-        private const val TAG = "BLE_Discovery"
+        private const val TAG = "BLE_Mesh"
         // CRITICAL: BitChat-compatible Service UUID
         val MESH_SERVICE_UUID: UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
         val MESH_CHARACTERISTIC_UUID: UUID = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
+        val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     }
 
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -34,7 +36,7 @@ class BluetoothMeshManager(
     private var scanner: BluetoothLeScanner? = null
     private var gattServer: BluetoothGattServer? = null
 
-    private val discoveredDevices = ConcurrentHashMap<String, Long>()
+    private val activeGatts = ConcurrentHashMap<String, BluetoothGatt>()
 
     fun isBluetoothEnabled(): Boolean = adapter?.isEnabled == true
 
@@ -80,7 +82,7 @@ class BluetoothMeshManager(
 
     private val advertiseCallback = object : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-            Log.i(TAG, "Advertising identity started successfully")
+            Log.i(TAG, "Identity Advertising started successfully")
         }
         override fun onStartFailure(errorCode: Int) {
             Log.e(TAG, "Advertising failed: $errorCode")
@@ -139,8 +141,75 @@ class BluetoothMeshManager(
                 ))
                 
                 Log.d(TAG, "Found Mesh User: $userName (Battery: $battery%) Address: $address")
+                
+                // Requirement: Auto-connect for data exchange
+                connectToDevice(result.device)
             } catch (e: Exception) {
-                // Ignore parsing errors (malformed identity)
+                // Ignore parsing errors
+            }
+        }
+    }
+
+    private fun connectToDevice(device: BluetoothDevice) {
+        if (activeGatts.containsKey(device.address)) return
+        Log.d(TAG, "Client: Connecting to ${device.address}")
+        device.connectGatt(context, false, gattClientCallback, BluetoothDevice.TRANSPORT_LE)
+    }
+
+    private val gattClientCallback = object : BluetoothGattCallback() {
+        override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            val address = gatt.device.address
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                Log.d(TAG, "Client: Connected to $address. Discovering services...")
+                gatt.discoverServices()
+                activeGatts[address] = gatt
+                PeerRegistry.updateConnectionStatus(address, true)
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.d(TAG, "Client: Disconnected from $address")
+                activeGatts.remove(address)?.close()
+                PeerRegistry.updateConnectionStatus(address, false)
+            }
+        }
+
+        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                val service = gatt.getService(MESH_SERVICE_UUID)
+                val characteristic = service?.getCharacteristic(MESH_CHARACTERISTIC_UUID)
+                if (characteristic != null) {
+                    Log.d(TAG, "Client: Mesh characteristic found on ${gatt.device.address}")
+                    gatt.setCharacteristicNotification(characteristic, true)
+                    val descriptor = characteristic.getDescriptor(CCCD_UUID)
+                    if (descriptor != null) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                            @Suppress("DEPRECATION")
+                            gatt.writeDescriptor(descriptor)
+                        }
+                    }
+                    transportLayer.registerChannel(gatt.device.address, BLEOutputStream(gatt, characteristic))
+                }
+            }
+        }
+
+        override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+            if (characteristic.uuid == MESH_CHARACTERISTIC_UUID) {
+                val value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    characteristic.value
+                } else {
+                    @Suppress("DEPRECATION")
+                    characteristic.value
+                }
+                PeerRegistry.dispatchIncoming(String(value, Charsets.UTF_8), gatt.device.address)
+            }
+        }
+        
+        @Deprecated("Deprecated in Java")
+        override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray) {
+            if (characteristic.uuid == MESH_CHARACTERISTIC_UUID) {
+                PeerRegistry.dispatchIncoming(String(value, Charsets.UTF_8), gatt.device.address)
             }
         }
     }
@@ -161,8 +230,22 @@ class BluetoothMeshManager(
     }
 
     private val gattServerCallback = object : BluetoothGattServerCallback() {
+        override fun onCharacteristicWriteRequest(
+            device: BluetoothDevice, requestId: Int, characteristic: BluetoothGattCharacteristic,
+            preparedWrite: Boolean, responseNeeded: Boolean, offset: Int, value: ByteArray?
+        ) {
+            if (characteristic.uuid == MESH_CHARACTERISTIC_UUID) {
+                value?.let {
+                    PeerRegistry.dispatchIncoming(String(it, Charsets.UTF_8), device.address)
+                }
+                if (responseNeeded) {
+                    gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value)
+                }
+            }
+        }
+
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
-            Log.d(TAG, "GATT Server Connection: ${device.address} -> $newState")
+            Log.d(TAG, "Server: Connection state change for ${device.address} -> $newState")
         }
     }
 
@@ -170,10 +253,27 @@ class BluetoothMeshManager(
         try {
             advertiser?.stopAdvertising(advertiseCallback)
             scanner?.stopScan(scanCallback)
+            activeGatts.values.forEach { it.close() }
+            activeGatts.clear()
             gattServer?.close()
             gattServer = null
         } catch (e: Exception) {
             Log.e(TAG, "Cleanup error: ${e.message}")
+        }
+    }
+
+    private inner class BLEOutputStream(private val gatt: BluetoothGatt, private val char: BluetoothGattCharacteristic) : java.io.OutputStream() {
+        override fun write(b: Int) {}
+        override fun write(b: ByteArray, off: Int, len: Int) {
+            val data = b.sliceArray(off until off + len)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                gatt.writeCharacteristic(char, data, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            } else {
+                @Suppress("DEPRECATION")
+                char.value = data
+                @Suppress("DEPRECATION")
+                gatt.writeCharacteristic(char)
+            }
         }
     }
 }
