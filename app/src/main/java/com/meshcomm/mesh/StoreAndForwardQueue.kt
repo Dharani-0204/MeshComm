@@ -50,29 +50,7 @@ class StoreAndForwardQueue(
             if (queue.isEmpty()) return@launch
             queue.forEach { msg ->
                 val json = gson.toJson(msg) + "\n"
-                transportLayer.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                sendToPeer(peerId, json)
+                transportLayer.sendToPeer(peerId, json)
                 delay(100)
             }
             clearQueue()
